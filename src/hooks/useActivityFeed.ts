@@ -1,0 +1,239 @@
+/**
+ * useActivityFeed.ts — Supabase Realtime + polling activity feed hook
+ *
+ * Subscribes to live activity for the connected wallet:
+ *   - Primary: Supabase Realtime channel (instant)
+ *   - Fallback: 30s polling via REST query
+ *
+ * IMPORTANT: No auto-decrypt on mount. Wallet connection is user-initiated.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useAccount } from "wagmi";
+
+const SUPABASE_URL    = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON   = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const POLL_INTERVAL   = 30_000;
+const PAGE_SIZE       = 20;
+
+// Lazy — only create client if env vars are present (Vercel must set these)
+const supabase = SUPABASE_URL && SUPABASE_ANON
+  ? createClient(SUPABASE_URL, SUPABASE_ANON)
+  : null;
+
+export type ActivityEventType =
+  | "all"
+  | "sent"
+  | "received"
+  | "stream"
+  | "invoice"
+  | "escrow"
+  | "stealth"
+  | "credit";
+
+export interface ActivityItem {
+  id:               number;
+  chain_id:         number;
+  block_number:     string;
+  tx_hash:          string;
+  log_index:        number;
+  contract_address: string;
+  event_name:       string;
+  wallet:           string;
+  participants:     string[];
+  args:             Record<string, unknown>;
+  created_at:       string;
+}
+
+export type ActivityRealtimeStatus = "idle" | "connecting" | "listening" | "polling" | "error";
+
+const creditContractEventNames = (
+  prefixes: string[],
+  events: string[],
+) => prefixes.flatMap((prefix) => events.map((event) => `${prefix}.${event}`));
+
+const CREDIT_MARKET_PREFIXES = [
+  "CreditMarket",
+  "CreditMarket2",
+  "CreditMarket3",
+  "CreditMarket4",
+  "CreditMarket5",
+  "ObscuraCreditMarket",
+];
+const CREDIT_VAULT_PREFIXES = ["CreditVault", "CreditVault2", "ObscuraCreditVault"];
+const CREDIT_AUCTION_PREFIXES = ["CreditAuction", "ObscuraCreditAuction"];
+const CREDIT_SCORE_PREFIXES = ["CreditScore", "ObscuraCreditScoreV2"];
+
+export const CREDIT_ACTIVITY_EVENT_NAMES = [
+  ...creditContractEventNames(CREDIT_MARKET_PREFIXES, [
+    "Supplied",
+    "Withdrew",
+    "CollateralSupplied",
+    "CollateralWithdrawn",
+    "Borrowed",
+    "Repaid",
+    "LiquidationOpened",
+  ]),
+  ...creditContractEventNames(CREDIT_VAULT_PREFIXES, ["Deposited", "Withdrew"]),
+  ...creditContractEventNames(CREDIT_AUCTION_PREFIXES, ["AuctionOpened", "BidSubmitted", "AuctionSettled"]),
+  ...creditContractEventNames(CREDIT_SCORE_PREFIXES, ["ScoreUpdated"]),
+];
+
+const EVENT_TYPE_FILTERS: Record<ActivityEventType, string[]> = {
+  all:      [],
+  sent:     ["ObscuraPay.PaymentSent"],
+  received: ["ObscuraPay.PaymentReceived"],
+  stream:   [
+    "ObscuraPayStreamV2.StreamCreated",
+    "ObscuraPayStreamV2.StreamCancelled",
+    "ObscuraPayStreamV2.StreamWithdrawn",
+    "ObscuraPayStreamV3.StreamCreated",
+    "ObscuraPayStreamV3.StreamCancelled",
+    "ObscuraPayStreamV3.CycleSettled",
+  ],
+  invoice:  ["ObscuraInvoice.InvoiceCreated", "ObscuraInvoice.InvoicePaid"],
+  escrow:   [
+    "ObscuraConfidentialEscrow.EscrowCreated",
+    "ObscuraConfidentialEscrow.EscrowFunded",
+    "ObscuraConfidentialEscrow.EscrowRedeemed",
+    "ObscuraConfidentialEscrow.EscrowCancelled",
+    "ObscuraConfidentialEscrow.EscrowRefunded",
+  ],
+  stealth:  ["ObscuraStealthRegistry.Announcement", "ObscuraStealthRegistry.MetaAddressSet"],
+  credit:   CREDIT_ACTIVITY_EVENT_NAMES,
+};
+
+interface UseActivityFeedResult {
+  items:      ActivityItem[];
+  isLoading:  boolean;
+  error:      string | null;
+  filter:     ActivityEventType;
+  setFilter:  (f: ActivityEventType) => void;
+  loadMore:   () => void;
+  hasMore:    boolean;
+  refresh:    () => void;
+  realtimeStatus: ActivityRealtimeStatus;
+  lastEventAt: string | null;
+  lastRefreshAt: string | null;
+}
+
+export function useActivityFeed(initialFilter: ActivityEventType = "all"): UseActivityFeedResult {
+  const { address } = useAccount();
+  const wallet      = address?.toLowerCase() ?? null;
+
+  const [items,     setItems]     = useState<ActivityItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
+  const [filter,    setFilter]    = useState<ActivityEventType>(initialFilter);
+  const [page,      setPage]      = useState(0);
+  const [hasMore,   setHasMore]   = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<ActivityRealtimeStatus>("idle");
+  const [lastEventAt, setLastEventAt] = useState<string | null>(null);
+  const [lastRefreshAt, setLastRefreshAt] = useState<string | null>(null);
+
+  const channelRef = useRef<ReturnType<NonNullable<typeof supabase>["channel"]> | null>(null);
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Fetch page ─────────────────────────────────────────────────────────────
+  const fetchPage = useCallback(async (pageIndex: number, replace: boolean) => {
+    if (!wallet || !supabase) return;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let query = supabase
+        .from("obscura_activity")
+        .select("*")
+        .contains("participants", [wallet])
+        .order("block_number", { ascending: false })
+        .range(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE - 1);
+
+      const allowed = EVENT_TYPE_FILTERS[filter];
+      if (allowed.length > 0) {
+        query = query.in("event_name", allowed);
+      }
+
+      const { data, error: err } = await query;
+      if (err) throw new Error(err.message);
+
+      const newItems = (data ?? []) as ActivityItem[];
+      setHasMore(newItems.length === PAGE_SIZE);
+      setItems((prev) => replace ? newItems : [...prev, ...newItems]);
+      setLastRefreshAt(new Date().toISOString());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [wallet, filter]);
+
+  // ── Initial fetch + re-fetch on wallet/filter change ──────────────────────
+  useEffect(() => {
+    if (!wallet) { setItems([]); setRealtimeStatus("idle"); return; }
+    setPage(0);
+    fetchPage(0, true);
+  }, [wallet, filter, fetchPage]);
+
+  // ── Realtime subscription ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!wallet || !supabase) {
+      setRealtimeStatus(wallet ? "error" : "idle");
+      return;
+    }
+
+    setRealtimeStatus("connecting");
+
+    const channel = supabase
+      .channel(`activity:${wallet}`)
+      .on(
+        "postgres_changes" as never,
+        {
+          event:  "INSERT",
+          schema: "public",
+          table:  "obscura_activity",
+        } as never,
+        (payload: { new: ActivityItem }) => {
+          const newItem = payload.new;
+          const participants = (newItem.participants ?? []).map((p) => p.toLowerCase());
+          if (newItem.wallet.toLowerCase() !== wallet && !participants.includes(wallet)) return;
+
+          const allowed = EVENT_TYPE_FILTERS[filter];
+          if (allowed.length === 0 || allowed.includes(newItem.event_name)) {
+            setLastEventAt(new Date().toISOString());
+            setItems((prev) => [newItem, ...prev]);
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") setRealtimeStatus("listening");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("polling");
+        else setRealtimeStatus("connecting");
+      });
+
+    channelRef.current = channel;
+
+    // Fallback polling (if Realtime drops)
+    pollRef.current = setInterval(() => fetchPage(0, true), POLL_INTERVAL);
+
+    return () => {
+      channel.unsubscribe();
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [wallet, filter, fetchPage]);
+
+  const loadMore = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPage(nextPage, false);
+  }, [page, fetchPage]);
+
+  const refresh = useCallback(() => {
+    setPage(0);
+    fetchPage(0, true);
+  }, [fetchPage]);
+
+  return useMemo(() => ({
+    items, isLoading, error, filter, setFilter, loadMore, hasMore, refresh, realtimeStatus, lastEventAt, lastRefreshAt,
+  }), [items, isLoading, error, filter, loadMore, hasMore, refresh, realtimeStatus, lastEventAt, lastRefreshAt]);
+}

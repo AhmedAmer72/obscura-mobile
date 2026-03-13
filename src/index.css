@@ -1,0 +1,1457 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "./styles/harmony-workspace-forms.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 6% 3%;
+    --foreground: 0 0% 92%;
+
+    --card: 240 5% 6%;
+    --card-foreground: 0 0% 92%;
+
+    --popover: 240 5% 6%;
+    --popover-foreground: 0 0% 92%;
+
+    --primary: 153 55% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 75%;
+
+    --muted: 240 4% 10%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 153 55% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 153 55% 50%;
+
+    --radius: 0.375rem;
+
+    --sidebar-background: 240 6% 5%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 153 55% 50%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 240 4% 12%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 153 55% 50%;
+
+    /* Custom tokens */
+    --glow-green: 153 55% 50%;
+    --glow-green-rgb: 52, 211, 153;
+    --terminal-green: 142 60% 50%;
+    --grid-line: 0 0% 12%;
+    --surface-glass: 240 5% 8%;
+    --accent-cyan: 190 90% 50%;
+    --accent-cyan-rgb: 6, 182, 212;
+    --accent-amber: 38 92% 50%;
+    --accent-amber-rgb: 245, 158, 11;
+
+    --surface-ink: 225 18% 4%;
+    --surface-elevated: 220 16% 8%;
+    --surface-soft: 220 12% 12%;
+    --line-soft: 0 0% 100%;
+    --brand-pay: 153 62% 54%;
+    --brand-credit: 258 88% 68%;
+    --brand-vote: 38 92% 58%;
+    --brand-system: 88 72% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Force scrollbar always visible — prevents layout width shift when navigating
+     between pages with different content heights */
+  html {
+    overflow-y: scroll;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .font-body {
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .text-glow {
+    /* No heavy neon — just the base color, consistent with all pages */
+    text-shadow: none;
+  }
+
+  .text-glow-sm {
+    text-shadow: none;
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 12px rgba(var(--accent-cyan-rgb), 0.4);
+  }
+
+  .border-glow {
+    box-shadow: 0 0 15px rgba(var(--glow-green-rgb), 0.15),
+                inset 0 0 15px rgba(var(--glow-green-rgb), 0.05);
+  }
+
+  .glass-panel {
+    @apply bg-card/60 backdrop-blur-lg border border-white/[0.06];
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.03);
+  }
+
+  /* Nav glassmorphism — smooth backdrop-filter transition (not covered by Tailwind transition-*) */
+  .nav-glass {
+    -webkit-backdrop-filter: blur(0px) saturate(1);
+    backdrop-filter: blur(0px) saturate(1);
+    transition:
+      background-color 500ms ease-out,
+      box-shadow 500ms ease-out,
+      -webkit-backdrop-filter 500ms ease-out,
+      backdrop-filter 500ms ease-out;
+  }
+
+  .nav-glass.scrolled {
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+  }
+
+  .glass-panel-hover {
+    @apply glass-panel transition-all duration-300;
+  }
+
+  .glass-panel-hover:hover {
+    @apply bg-card/80 border-white/[0.1];
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05),
+                0 0 20px rgba(var(--glow-green-rgb), 0.06);
+  }
+
+  .glass-card {
+    @apply glass-panel rounded-lg transition-all duration-300;
+  }
+
+  .glass-card:hover {
+    @apply bg-card/80 border-primary/20;
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05),
+                0 8px 32px rgba(0,0,0,0.3),
+                0 0 20px rgba(var(--glow-green-rgb), 0.08);
+  }
+
+  .scanline-overlay {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+  }
+
+  .grid-overlay {
+    background-image:
+      linear-gradient(hsl(var(--grid-line)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-line)) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  .noise-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+}
+
+/* Glitch animation */
+@keyframes glitch-1 {
+  0%, 100% { clip-path: inset(40% 0 61% 0); transform: translate(-2px, 2px); }
+  20% { clip-path: inset(92% 0 1% 0); transform: translate(1px, -1px); }
+  40% { clip-path: inset(43% 0 1% 0); transform: translate(-1px, 3px); }
+  60% { clip-path: inset(25% 0 58% 0); transform: translate(3px, 1px); }
+  80% { clip-path: inset(54% 0 7% 0); transform: translate(-3px, -2px); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { clip-path: inset(65% 0 13% 0); transform: translate(2px, -1px); }
+  20% { clip-path: inset(15% 0 72% 0); transform: translate(-1px, 2px); }
+  40% { clip-path: inset(82% 0 5% 0); transform: translate(1px, -2px); }
+  60% { clip-path: inset(33% 0 45% 0); transform: translate(-2px, 1px); }
+  80% { clip-path: inset(10% 0 78% 0); transform: translate(3px, 2px); }
+}
+
+@keyframes flicker {
+  0%, 97%, 100% { opacity: 1; }
+  98% { opacity: 0.8; }
+  99% { opacity: 0.9; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes data-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes sweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ─── Custom scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #06b6d4 0%, #34d399 100%);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #22d3ee 0%, #6ee7b7 100%);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.55);
+}
+::-webkit-scrollbar-corner { background: transparent; }
+* { scrollbar-width: thin; scrollbar-color: #34d399 transparent; }
+
+/* ─── Pay card — glass card with gradient top accent ─────────────────────── */
+.pay-card {
+  position: relative;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.875rem;
+  overflow: hidden;
+}
+.pay-card::before { content: none; }
+
+/* Legacy accent variants neutralized to plain hairline (W5P1.9.1) */
+.pay-card-cyan::before,
+.pay-card-amber::before,
+.pay-card-violet::before { content: none; background: none; }
+
+/* ─── Form inputs (W5P1.9 ivory + compact) ───────────────────────────────── */
+.pay-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: hsl(var(--foreground));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.pay-input::placeholder { color: hsl(var(--muted-foreground)); opacity: 0.55; }
+.pay-input:hover:not(:focus) { border-color: hsl(var(--foreground) / 0.18); }
+.pay-input:focus {
+  border-color: hsl(var(--foreground) / 0.4);
+  box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.08);
+}
+/* Compact variant for 2-col field grids inside drawers */
+.pay-input-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+/* Calendar/clock picker icon — neutral instead of emerald */
+.pay-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+}
+.pay-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ─── Select dropdowns (W5P1.9 ivory + compact) ──────────────────────────── */
+.pay-select {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 0.7rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.pay-select:hover,
+.pay-select:focus { border-color: hsl(var(--foreground) / 0.4); }
+.pay-select option {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+/* ─── Buttons (W5P1.9 compact, no uppercase, no neon) ────────────────────── */
+.btn-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  /* Defeat any utility `py-*` override that ballooned the button in legacy code. */
+  min-height: 2.25rem !important;
+  max-height: 2.25rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+.btn-pay:disabled { opacity: 0.38; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; }
+
+/* Small row-level variant — 28 px tall, used inside lists / drawers */
+.btn-pay-sm {
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+  font-size: 0.75rem;
+}
+
+/* Text-link button — no border, no chrome, just text */
+.btn-pay-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  height: auto;
+  font-size: 0.8125rem;
+  color: hsl(var(--foreground) / 0.7);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.btn-pay-link:hover { color: hsl(var(--foreground)); }
+
+/* Canonical primary — Mercury/Linear style: foreground on background */
+.btn-pay-primary {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.btn-pay-primary:hover:not(:disabled) { opacity: 0.9; }
+.btn-pay-primary:active:not(:disabled) { transform: translateY(0.5px); }
+
+/* Legacy color variants — kept for backwards compatibility, neutralized (no neon glow) */
+.btn-pay-emerald {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.btn-pay-emerald:hover:not(:disabled) { opacity: 0.9; }
+.btn-pay-emerald:active:not(:disabled) { transform: translateY(0.5px); }
+
+.btn-pay-cyan {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.btn-pay-cyan:hover:not(:disabled) { opacity: 0.9; }
+.btn-pay-cyan:active:not(:disabled) { transform: translateY(0.5px); }
+
+.btn-pay-amber {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.btn-pay-amber:hover:not(:disabled) { background: hsl(var(--muted)); }
+.btn-pay-amber:active:not(:disabled) { transform: translateY(0.5px); }
+
+.btn-pay-violet {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.btn-pay-violet:hover:not(:disabled) { opacity: 0.9; }
+.btn-pay-violet:active:not(:disabled) { transform: translateY(0.5px); }
+
+.btn-pay-ghost {
+  background: transparent;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.btn-pay-ghost:hover:not(:disabled) {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--foreground) / 0.2);
+}
+
+/* ─── Status badge ─────────────────────────────────────────────────────────── */
+.pay-badge {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.375rem;
+}
+.pay-badge-emerald { color: #6ee7b7; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); }
+.pay-badge-cyan    { color: #67e8f9; background: rgba(6,182,212,0.1);  border: 1px solid rgba(6,182,212,0.25); }
+.pay-badge-amber   { color: #fde68a; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); }
+.pay-badge-violet  { color: #c4b5fd; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); }
+.pay-badge-red     { color: #fca5a5; background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.25); }
+
+/* ─── Vault landing (obscura-os / obscura-vault reference) ─────────────────── */
+.landing-vault {
+  --background: 96 18% 98%;
+  --foreground: 140 22% 12%;
+  --surface: 96 20% 96%;
+  --vault-surface-elevated: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 140 22% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 140 22% 12%;
+  --primary: 145 28% 28%;
+  --primary-foreground: 96 18% 98%;
+  --vault-brand: 145 32% 38%;
+  --vault-brand-soft: 145 40% 92%;
+  --vault-brand-ink: 140 22% 14%;
+  --secondary: 96 15% 94%;
+  --secondary-foreground: 140 18% 18%;
+  --muted: 96 12% 94%;
+  --muted-foreground: 140 8% 42%;
+  --accent: 145 35% 90%;
+  --accent-foreground: 140 22% 14%;
+  --destructive: 25 75% 48%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 96 12% 88%;
+  --vault-border-subtle: 96 10% 91%;
+  --input: 96 12% 88%;
+  --ring: 145 32% 38%;
+  --vault-ink: oklch(0.14 0.018 150);
+  --vault-ink-elev: oklch(0.18 0.02 150);
+  --vault-ink-fg: oklch(0.96 0.012 130);
+  --vault-ink-muted: oklch(0.68 0.018 140);
+  --vault-ink-accent: oklch(0.88 0.14 145);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(20 60 40 / 0.08);
+  --shadow-float: 0 2px 4px rgb(0 0 0 / 0.04), 0 24px 60px -20px rgb(20 60 40 / 0.18);
+  --shadow-glow: 0 0 0 1px hsl(145 32% 38% / 0.18), 0 12px 40px -12px hsl(145 32% 38% / 0.35);
+  color-scheme: light;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.landing-vault .font-display {
+  font-family: "Instrument Serif", "Cormorant Garamond", ui-serif, Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+.landing-vault .font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.landing-vault .tag-bracket {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--vault-brand));
+}
+
+.landing-vault .receipt-card {
+  border: 1px dashed hsl(var(--vault-brand) / 0.35);
+  background: hsl(var(--vault-surface-elevated) / 0.92);
+  border-radius: 10px;
+}
+
+.landing-vault .aurora-ring::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(closest-side, hsl(var(--vault-brand) / 0.14), transparent 70%);
+  filter: blur(40px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-vault .chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: white;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -8px 16px rgb(0 0 0 / 0.18),
+    0 6px 20px -8px var(--chip-glow, rgb(0 0 0 / 0.4));
+  background: linear-gradient(155deg, var(--chip-from), var(--chip-to));
+}
+
+.landing-vault .chip-forest,
+.landing-vault .chip-emerald { --chip-from: #b2eb76; --chip-to: #2d6b45; --chip-glow: rgb(45 107 69 / 0.45); }
+.landing-vault .chip-lime,
+.landing-vault .chip-amber { --chip-from: #d4f5a8; --chip-to: #3d8f5c; --chip-glow: rgb(61 140 90 / 0.45); }
+.landing-vault .chip-moss,
+.landing-vault .chip-violet { --chip-from: #7dce96; --chip-to: #245a38; --chip-glow: rgb(36 90 56 / 0.45); }
+.landing-vault .chip-deep,
+.landing-vault .chip-sky { --chip-from: #5ecf8a; --chip-to: #18280e; --chip-glow: rgb(24 40 14 / 0.5); }
+.landing-vault .chip-rose { --chip-from: #9ed4a8; --chip-to: #1a4a2e; --chip-glow: rgb(45 107 69 / 0.4); }
+
+.landing-vault .bg-ink { background: var(--vault-ink); }
+.landing-vault .bg-ink-elev { background: var(--vault-ink-elev); }
+.landing-vault .text-ink-fg { color: var(--vault-ink-fg); }
+.landing-vault .text-ink-mute { color: var(--vault-ink-muted); }
+.landing-vault .border-ink { border-color: oklch(1 0 0 / 8%); }
+
+.landing-vault .mesh-bg {
+  background:
+    radial-gradient(50% 40% at 20% 30%, hsl(var(--vault-brand) / 0.22), transparent 70%),
+    radial-gradient(40% 35% at 80% 20%, hsl(230 70% 60% / 0.18), transparent 70%),
+    radial-gradient(45% 40% at 60% 80%, hsl(290 60% 60% / 0.16), transparent 70%);
+  filter: blur(20px);
+}
+
+.landing-vault .marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+/* ─── Spade-style landing page ─────────────────────────────────────────────── */
+.landing-spade {
+  --background: 90 20% 97%;
+  --foreground: 120 30% 8%;
+  --primary: 88 72% 68%;
+  --primary-foreground: 120 30% 8%;
+  --muted-foreground: 120 10% 40%;
+  --border: 90 15% 88%;
+  color-scheme: light;
+  background: #F7F9F2;
+  color: #18280E;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+.landing-spade h1,
+.landing-spade h2,
+.landing-spade h3,
+.landing-spade .font-display {
+  font-family: 'Instrument Serif', 'Cormorant Garamond', ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.landing-spade .font-body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Shared slogan — bold editorial display */
+.landing-spade .obscura-slogan {
+  font-feature-settings: "liga" 1, "kern" 1;
+  max-width: 14ch;
+}
+
+.landing-spade .obscura-slogan--hero {
+  max-width: none;
+}
+
+.landing-spade .obscura-slogan-line1 {
+  font-family: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.048em;
+  line-height: 0.9;
+  color: #0a0f08;
+  -webkit-text-stroke: 0.4px #0a0f08;
+  paint-order: stroke fill;
+}
+
+.landing-spade .obscura-slogan--hero .obscura-slogan-line1 {
+  font-size: clamp(2.65rem, 9vw, 5.25rem);
+}
+
+.landing-spade .obscura-slogan--page .obscura-slogan-line1 {
+  font-size: clamp(2.45rem, 8vw, 4.5rem);
+}
+
+.landing-spade .obscura-slogan-line2-wrap {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.landing-spade .obscura-slogan-line2,
+.landing-spade .obscura-slogan-line2-text {
+  font-family: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.038em;
+  line-height: 0.88;
+  filter: drop-shadow(0 10px 24px rgba(24, 40, 14, 0.07));
+}
+
+.landing-spade .obscura-slogan-line2-text {
+  background: linear-gradient(102deg, #0a0f08 0%, #18280e 36%, #2d6b45 70%, #6bb84a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-spade .obscura-slogan-word-computed {
+  background: linear-gradient(102deg, #0a0f08 0%, #18280e 55%, #2d6b45 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-spade .obscura-slogan-word-computed--sealing {
+  opacity: 0.72;
+}
+
+.landing-spade .obscura-slogan-word-open {
+  background: linear-gradient(102deg, #2d6b45 0%, #5ecf8a 55%, #b2eb76 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-spade .obscura-slogan--hero .obscura-slogan-line2-wrap,
+.landing-spade .obscura-slogan--hero .obscura-slogan-line2-text {
+  font-size: clamp(2.85rem, 9.5vw, 5.5rem);
+}
+
+.landing-spade .obscura-slogan--page .obscura-slogan-line2-wrap,
+.landing-spade .obscura-slogan--page .obscura-slogan-line2-text {
+  font-size: clamp(2.6rem, 8.5vw, 4.75rem);
+}
+
+.landing-spade .obscura-slogan-word-computed,
+.landing-spade .obscura-slogan-word-open {
+  font-style: italic;
+}
+
+/* Figure showcase — fixed center column so the organic card never collapses */
+.landing-spade .figure-showcase-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .landing-spade .figure-showcase-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px) minmax(0, 1fr);
+  }
+}
+
+/* Shield wireframe — zoom left-weighted asset so the glyph sits in the frame center */
+.landing-spade .organic-figure-shield-stage {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-spade .organic-figure-shield-mask {
+  flex-shrink: 0;
+  height: 78%;
+  width: min(62%, 200px);
+  -webkit-mask-image: url("/images/docs-shield-figure.png");
+  mask-image: url("/images/docs-shield-figure.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 42% center;
+  mask-position: 42% center;
+  -webkit-mask-mode: luminance;
+  mask-mode: luminance;
+  background: linear-gradient(
+    165deg,
+    #1a4a2e 0%,
+    #2d6b45 42%,
+    #3d8f5c 72%,
+    #5ecf8a 100%
+  );
+}
+
+@media (min-width: 640px) {
+  .landing-spade .organic-figure-shield-mask {
+    height: 82%;
+    width: min(58%, 210px);
+  }
+}
+
+/* ─── Docs page (light launch theme) ───────────────────────────────────────── */
+.landing-spade.docs-page .glass-panel,
+.landing-spade.docs-page .docs-panel {
+  background: #ffffff;
+  border: 1px solid rgba(24, 40, 14, 0.1);
+  backdrop-filter: none;
+  box-shadow: 0 1px 3px rgba(24, 40, 14, 0.06);
+}
+
+.landing-spade.docs-page .docs-code code {
+  color: rgba(178, 235, 118, 0.88);
+}
+
+.landing-spade .money-glyph-figure {
+  --scan-line: 0%;
+  background: transparent;
+  animation: money-glyph-scan-sweep 6.5s linear infinite;
+}
+
+.landing-spade .money-glyph-figure--active {
+  animation: money-glyph-scan-sweep-active 2.6s ease-in-out forwards;
+}
+
+/* Luminance mask: black plate drops out, lines render as solid forest green */
+.landing-spade .money-glyph-mask {
+  -webkit-mask-image: url("/images/money-glyph-hero.png");
+  mask-image: url("/images/money-glyph-hero.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mask-mode: luminance;
+  -webkit-mask-mode: luminance;
+  background: linear-gradient(
+    165deg,
+    #1a4a2e 0%,
+    #2d6b45 42%,
+    #3d8f5c 72%,
+    #245a38 100%
+  );
+  filter: contrast(1.2) drop-shadow(0 12px 28px rgba(24, 40, 14, 0.14))
+    drop-shadow(0 2px 10px rgba(45, 107, 69, 0.28));
+}
+
+.landing-spade .money-glyph-mask--boost {
+  opacity: 0.42;
+  background: #18300e;
+  filter: blur(18px);
+  transform: scale(1.02);
+  animation: money-glyph-glow-pulse 4.5s ease-in-out infinite;
+}
+
+/* Scan-line wipe: digital grid above line, wireframe green below */
+@property --scan-line {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+.landing-spade .money-glyph-mask--live {
+  z-index: 1;
+  -webkit-mask-image:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent var(--scan-line),
+      #000 calc(var(--scan-line) + 0.2%),
+      #000 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  mask-image:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent var(--scan-line),
+      #000 calc(var(--scan-line) + 0.2%),
+      #000 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  -webkit-mask-size: 100% 100%, contain;
+  mask-size: 100% 100%, contain;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-position: center, center;
+  mask-position: center, center;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-mode: alpha, luminance;
+  mask-mode: alpha, luminance;
+  animation: money-glyph-idle-breathe 6s ease-in-out infinite;
+}
+
+/* Encrypted zone — bright grid plate (slider left side in reference) */
+.landing-spade .money-glyph-encrypt-trail {
+  pointer-events: none;
+  z-index: 2;
+  -webkit-mask-image:
+    linear-gradient(
+      180deg,
+      #000 0%,
+      #000 calc(var(--scan-line) - 0.05%),
+      transparent var(--scan-line),
+      transparent 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  mask-image:
+    linear-gradient(
+      180deg,
+      #000 0%,
+      #000 calc(var(--scan-line) - 0.05%),
+      transparent var(--scan-line),
+      transparent 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  -webkit-mask-size: 100% 100%, contain;
+  mask-size: 100% 100%, contain;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-position: center, center;
+  mask-position: center, center;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-mode: alpha, luminance;
+  mask-mode: alpha, luminance;
+  background-color: #f7f9f2;
+  background-image:
+    linear-gradient(rgba(45, 107, 69, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 107, 69, 0.14) 1px, transparent 1px);
+  background-size: 7px 7px;
+}
+
+/* Dot-matrix $ shape inside encrypted zone */
+.landing-spade .money-glyph-digital-dots {
+  pointer-events: none;
+  z-index: 3;
+  -webkit-mask-image:
+    linear-gradient(
+      180deg,
+      #000 0%,
+      #000 calc(var(--scan-line) - 0.05%),
+      transparent var(--scan-line),
+      transparent 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  mask-image:
+    linear-gradient(
+      180deg,
+      #000 0%,
+      #000 calc(var(--scan-line) - 0.05%),
+      transparent var(--scan-line),
+      transparent 100%
+    ),
+    url("/images/money-glyph-hero.png");
+  -webkit-mask-size: 100% 100%, contain;
+  mask-size: 100% 100%, contain;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-position: center, center;
+  mask-position: center, center;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-mode: alpha, luminance;
+  mask-mode: alpha, luminance;
+  background-color: transparent;
+  background-image: radial-gradient(circle, #3a6b8c 1.15px, transparent 1.2px);
+  background-size: 3.5px 3.5px;
+  opacity: 0.88;
+}
+
+/* Sharp scan boundary — like slider edge */
+.landing-spade .money-glyph-scan-edge {
+  position: absolute;
+  z-index: 5;
+  left: 2%;
+  right: 2%;
+  top: var(--scan-line);
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.95) 18%,
+    #b2eb76 50%,
+    rgba(255, 255, 255, 0.95) 82%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(24, 40, 14, 0.12),
+    0 0 16px rgba(178, 235, 118, 0.55),
+    0 0 32px rgba(178, 235, 118, 0.2);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.landing-spade .money-glyph-figure--active .money-glyph-mask--live {
+  animation: money-glyph-resolve 2.6s ease-in-out forwards;
+}
+
+.landing-spade .money-glyph-cipher {
+  -webkit-mask-image: url("/images/money-glyph-hero.png");
+  mask-image: url("/images/money-glyph-hero.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mask-mode: luminance;
+  -webkit-mask-mode: luminance;
+  background-color: #142610;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      #1a4a2e 0,
+      #1a4a2e 3px,
+      #4a9e6a 3px,
+      #4a9e6a 4px,
+      #142610 4px,
+      #142610 7px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 5px,
+      rgba(247, 249, 242, 0.14) 5px,
+      rgba(247, 249, 242, 0.14) 6px
+    );
+  background-size: 140% 100%, 100% 100%;
+  opacity: 0.1;
+  animation: money-glyph-cipher-scroll 5s linear infinite;
+}
+
+.landing-spade .money-glyph-figure--active .money-glyph-cipher {
+  animation:
+    money-glyph-cipher-opacity 2.6s ease-in-out forwards,
+    money-glyph-cipher-scroll 0.18s linear infinite;
+}
+
+.landing-spade .money-glyph-seal-pulse {
+  border-radius: 50%;
+  border: 1px solid rgba(45, 107, 69, 0.35);
+  opacity: 0;
+  animation: none;
+}
+
+.landing-spade .money-glyph-figure--active .money-glyph-seal-pulse {
+  animation: money-glyph-seal-pulse 2.6s ease-out forwards;
+}
+
+.landing-spade .money-glyph-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    rgba(24, 40, 14, 0.05) 3px,
+    rgba(24, 40, 14, 0.05) 4px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+  animation: money-glyph-scan-idle 14s linear infinite;
+}
+
+.landing-spade .money-glyph-figure--active .money-glyph-scanlines {
+  animation: money-glyph-scan-drift 2.6s linear forwards;
+  opacity: 0.7;
+}
+
+@keyframes money-glyph-idle-breathe {
+  0%,
+  100% {
+    filter: contrast(1.2) drop-shadow(0 12px 28px rgba(24, 40, 14, 0.14))
+      drop-shadow(0 2px 10px rgba(45, 107, 69, 0.28));
+    transform: scale(1);
+  }
+  50% {
+    filter: contrast(1.28) drop-shadow(0 14px 32px rgba(24, 40, 14, 0.16))
+      drop-shadow(0 4px 14px rgba(45, 107, 69, 0.34));
+    transform: scale(1.012);
+  }
+}
+
+@keyframes money-glyph-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.34;
+    transform: scale(1.02);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.045);
+  }
+}
+
+@keyframes money-glyph-scan-sweep {
+  0% {
+    --scan-line: 2%;
+  }
+  96% {
+    --scan-line: 98%;
+  }
+  100% {
+    --scan-line: 2%;
+  }
+}
+
+@keyframes money-glyph-scan-sweep-active {
+  0%,
+  42% {
+    --scan-line: 2%;
+  }
+  58% {
+    --scan-line: 98%;
+  }
+  100% {
+    --scan-line: 98%;
+  }
+}
+
+@keyframes money-glyph-scan-idle {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 48px;
+  }
+}
+
+@keyframes money-glyph-resolve {
+  0%,
+  48% {
+    filter: contrast(1.2) drop-shadow(0 12px 28px rgba(24, 40, 14, 0.14))
+      drop-shadow(0 2px 10px rgba(45, 107, 69, 0.28));
+  }
+  52% {
+    filter: contrast(0.75) brightness(1.35) blur(2px)
+      drop-shadow(0 2px 6px rgba(45, 107, 69, 0.15));
+  }
+  58% {
+    filter: contrast(1.35) brightness(1.05) blur(0)
+      drop-shadow(0 14px 32px rgba(45, 107, 69, 0.22))
+      drop-shadow(0 2px 12px rgba(72, 140, 90, 0.35));
+  }
+  100% {
+    filter: contrast(1.2) drop-shadow(0 12px 28px rgba(24, 40, 14, 0.14))
+      drop-shadow(0 2px 10px rgba(45, 107, 69, 0.28));
+  }
+}
+
+@keyframes money-glyph-cipher-opacity {
+  0%,
+  46% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.88;
+  }
+  56% {
+    opacity: 0.45;
+  }
+  62%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes money-glyph-cipher-scroll {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 48px 0, 0 4px;
+  }
+}
+
+@keyframes money-glyph-seal-pulse {
+  0%,
+  54% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  58% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  66% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes money-glyph-scan-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 8px;
+  }
+}
+
+.landing-spade .footer-wire-coin {
+  -webkit-mask-image: url("/images/money-glyph-hero.png");
+  mask-image: url("/images/money-glyph-hero.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mask-mode: luminance;
+  -webkit-mask-mode: luminance;
+  background: linear-gradient(145deg, #b2eb76 0%, #5ecf8a 45%, #2d6b45 100%);
+  filter: drop-shadow(0 8px 24px rgba(178, 235, 118, 0.15));
+}
+
+.landing-spade .footer-marquee-track {
+  animation: footer-marquee 45s linear infinite;
+}
+
+.landing-spade .footer-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes footer-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.landing-spade .marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.landing-spade .marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+}
+
+/* Vault sections nested under spade landing keep their own tokens */
+.landing-spade .landing-vault {
+  --background: 96 18% 98%;
+  --foreground: 140 22% 12%;
+  --surface: 96 20% 96%;
+  --vault-surface-elevated: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 140 22% 12%;
+  --muted-foreground: 140 8% 42%;
+  --vault-brand: 145 32% 38%;
+  --vault-brand-soft: 145 40% 92%;
+  --vault-brand-ink: 140 22% 14%;
+  --border: 96 12% 88%;
+  --vault-border-subtle: 96 10% 91%;
+  --accent: 145 35% 90%;
+  --accent-foreground: 140 22% 14%;
+  --vault-ink: oklch(0.14 0.018 150);
+  --vault-ink-elev: oklch(0.18 0.02 150);
+  --vault-ink-fg: oklch(0.96 0.012 130);
+  --vault-ink-muted: oklch(0.68 0.018 140);
+  --vault-ink-accent: oklch(0.88 0.14 145);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(20 60 40 / 0.08);
+  --shadow-float: 0 2px 4px rgb(0 0 0 / 0.04), 0 24px 60px -20px rgb(20 60 40 / 0.18);
+  --shadow-glow: 0 0 0 1px hsl(145 32% 38% / 0.18), 0 12px 40px -12px hsl(145 32% 38% / 0.35);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.landing-spade .landing-vault .font-display {
+  font-family: "Instrument Serif", "Cormorant Garamond", ui-serif, Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+.landing-spade .landing-vault .tag-bracket {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--vault-brand));
+}
+
+.landing-spade .landing-vault .receipt-card {
+  border: 1px dashed hsl(var(--vault-brand) / 0.35);
+  background: hsl(var(--vault-surface-elevated) / 0.92);
+  border-radius: 10px;
+}
+
+.landing-spade .landing-vault .chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: white;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -8px 16px rgb(0 0 0 / 0.18),
+    0 6px 20px -8px var(--chip-glow, rgb(0 0 0 / 0.4));
+  background: linear-gradient(155deg, var(--chip-from), var(--chip-to));
+}
+
+.landing-spade .landing-vault .chip-forest,
+.landing-spade .landing-vault .chip-emerald { --chip-from: #b2eb76; --chip-to: #2d6b45; --chip-glow: rgb(45 107 69 / 0.45); }
+.landing-spade .landing-vault .chip-lime,
+.landing-spade .landing-vault .chip-amber { --chip-from: #d4f5a8; --chip-to: #3d8f5c; --chip-glow: rgb(61 140 90 / 0.45); }
+.landing-spade .landing-vault .chip-moss,
+.landing-spade .landing-vault .chip-violet { --chip-from: #7dce96; --chip-to: #245a38; --chip-glow: rgb(36 90 56 / 0.45); }
+.landing-spade .landing-vault .chip-deep,
+.landing-spade .landing-vault .chip-sky { --chip-from: #5ecf8a; --chip-to: #18280e; --chip-glow: rgb(24 40 14 / 0.5); }
+.landing-spade .landing-vault .chip-rose { --chip-from: #9ed4a8; --chip-to: #1a4a2e; --chip-glow: rgb(45 107 69 / 0.4); }
+
+.landing-spade .landing-vault .bg-ink { background: var(--vault-ink); }
+.landing-spade .landing-vault .text-ink-fg { color: var(--vault-ink-fg); }
+.landing-spade .landing-vault .text-ink-mute { color: var(--vault-ink-muted); }
+.landing-spade .landing-vault .border-ink { border-color: oklch(1 0 0 / 8%); }
+
+.landing-spade .landing-vault .mesh-bg {
+  background:
+    radial-gradient(50% 40% at 20% 30%, hsl(var(--vault-brand) / 0.22), transparent 70%),
+    radial-gradient(40% 35% at 80% 20%, hsl(230 70% 60% / 0.18), transparent 70%),
+    radial-gradient(45% 40% at 60% 80%, hsl(290 60% 60% / 0.16), transparent 70%);
+  filter: blur(20px);
+}
+
+.landing-spade .landing-vault .marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+.landing-spade .landing-vault .logo-marquee-track {
+  animation-play-state: running;
+}
+
+.landing-spade .landing-vault .scroll-story-section {
+  isolation: isolate;
+}
+
+/* ─── Light app workspace (Pay · Credit · Vote) ───────────────────────────── */
+.obscura-app {
+  --background: 96 18% 97%;
+  --foreground: 140 18% 12%;
+  --surface: 95 22% 94%;
+  --card: 0 0% 100%;
+  --card-foreground: 140 18% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 140 18% 12%;
+  --primary: 145 22% 18%;
+  --primary-foreground: 96 18% 97%;
+  --secondary: 95 15% 92%;
+  --secondary-foreground: 140 12% 28%;
+  --muted: 95 12% 93%;
+  --muted-foreground: 140 8% 42%;
+  --accent: 145 55% 72%;
+  --accent-foreground: 145 30% 14%;
+  --destructive: 25 75% 48%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 150 45% 42%;
+  --border: 95 14% 86%;
+  --border-strong: 95 12% 78%;
+  --input: 95 14% 88%;
+  --ring: 145 40% 45%;
+  color-scheme: light;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.obscura-app h1,
+.obscura-app h2,
+.obscura-app h3,
+.obscura-app .font-display {
+  font-family: 'Instrument Serif', 'Cormorant Garamond', 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.obscura-app .font-editorial {
+  font-family: 'Instrument Serif', 'Cormorant Garamond', serif;
+}
+
+.obscura-app .hairline {
+  border: 1px solid hsl(var(--border));
+}
+
+.obscura-app .hairline-strong {
+  border: 1px solid hsl(var(--border-strong));
+}
+
+.obscura-app .bg-surface {
+  background-color: hsl(var(--surface));
+}
+
+.obscura-app .text-success {
+  color: hsl(var(--success));
+}
+
+@keyframes cipher-shimmer-keyframes {
+  0%, 100% { opacity: 0.85; letter-spacing: 0.12em; }
+  50% { opacity: 1; letter-spacing: 0.18em; }
+}
+
+.obscura-app .cipher-shimmer {
+  animation: cipher-shimmer-keyframes 2.4s ease-in-out infinite;
+}
+
+.obscura-app button,
+.obscura-app a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Wallet connect — light pill */
+.obscura-app .app-wallet-slot button {
+  border-radius: 9999px !important;
+  border-color: rgba(24, 40, 14, 0.12) !important;
+  background: #fff !important;
+  color: #18280e !important;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 12px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 16px rgba(24, 40, 14, 0.06);
+}
+
+.obscura-app .app-wallet-slot button:hover {
+  border-color: rgba(24, 40, 14, 0.2) !important;
+  background: #f7f9f2 !important;
+}
+
+/* Remap common dark-glass utility patterns inside app workspace */
+.obscura-app [class*="border-white/"],
+.obscura-app [class*="border-white\\/"] {
+  border-color: rgba(24, 40, 14, 0.08) !important;
+}
+
+.obscura-app [class*="bg-white/\\[0.0"],
+.obscura-app [class*="bg-white\\/\\[0.0"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.obscura-app [class*="bg-\\[#0"],
+.obscura-app [class*="bg-\\[#06"],
+.obscura-app [class*="bg-\\[#05"] {
+  background-color: #fff !important;
+}
+
+.obscura-app [class*="text-white/"] {
+  color: rgba(24, 40, 14, 0.55) !important;
+}
+
+.obscura-app [class*="text-white\\/8"],
+.obscura-app [class*="text-white\\/9"] {
+  color: rgba(24, 40, 14, 0.88) !important;
+}
+
+.obscura-app [class*="text-emerald-200"],
+.obscura-app [class*="text-emerald-300"],
+.obscura-app [class*="text-emerald-400"] {
+  color: #047857 !important;
+}
+
+.obscura-app [class*="text-cyan-100"],
+.obscura-app [class*="text-cyan-200"] {
+  color: #0e7490 !important;
+}
+
+.obscura-app [class*="text-violet-200"] {
+  color: #6d28d9 !important;
+}
+
+.obscura-app input,
+.obscura-app textarea,
+.obscura-app select {
+  background-color: #fff;
+  border-color: rgba(24, 40, 14, 0.1);
+  color: #18280e;
+}
+
+/* Legacy pay-card inside harmony workspace → flat editorial cards */
+.obscura-app .pay-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.obscura-app .pay-card::before {
+  display: none;
+}
+
+.premium-focus {
+  outline: none;
+}
+
+.premium-focus:focus-visible {
+  box-shadow: 0 0 0 2px rgba(178, 235, 118, 0.48);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obscura-app * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  /* Keep landing marquee + scroll story usable; show headline unblurred */
+  .landing-spade .landing-vault .logo-marquee-track {
+    animation: none !important;
+  }
+
+  .landing-spade .scroll-story-section [style*="filter"] {
+    filter: none !important;
+  }
+
+  .landing-spade .money-glyph-mask--live,
+  .landing-spade .money-glyph-mask--boost,
+  .landing-spade .money-glyph-figure,
+  .landing-spade .money-glyph-encrypt-trail,
+  .landing-spade .money-glyph-digital-dots,
+  .landing-spade .money-glyph-cipher,
+  .landing-spade .money-glyph-scanlines,
+  .landing-spade .money-glyph-figure--active,
+  .landing-spade .money-glyph-figure--active .money-glyph-mask--live,
+  .landing-spade .money-glyph-figure--active .money-glyph-cipher,
+  .landing-spade .money-glyph-figure--active .money-glyph-seal-pulse,
+  .landing-spade .money-glyph-figure--active .money-glyph-scanlines {
+    animation: none !important;
+  }
+
+  .landing-spade .money-glyph-status {
+    display: none;
+  }
+
+  .landing-spade .footer-marquee-track {
+    animation: none !important;
+  }
+}
