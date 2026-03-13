@@ -42,7 +42,7 @@ export function HarmonyAppShell({
   const mobileShell = IS_MOBILE_APP;
 
   return (
-    <div className="obscura-app isolate flex min-h-screen bg-background text-foreground">
+    <div className="obscura-app isolate flex min-h-[100dvh] bg-background text-foreground md:min-h-screen">
       {!mobileShell ? (
         <aside className="hidden w-16 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface py-4 md:flex">
           <Link
@@ -146,8 +146,10 @@ export function HarmonyAppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header
-          className="relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:px-8"
-          style={mobileShell ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
+          className={cn(
+            "relative z-30 flex shrink-0 items-center justify-between border-b border-border bg-background",
+            mobileShell ? "mobile-app-header px-4" : "h-14 px-4 md:px-8",
+          )}
         >
           {mobileShell ? (
             <div className="flex min-w-0 items-center gap-2.5">
@@ -188,8 +190,8 @@ export function HarmonyAppShell({
 
         <main
           className={cn(
-            "relative z-10 mx-auto w-full max-w-[1300px] overscroll-y-contain px-4 py-6 md:px-8 md:py-14",
-            mobileShell ? "pb-4 md:pb-14" : "pb-24 md:pb-14",
+            "relative z-10 mx-auto w-full max-w-[1300px] overscroll-y-contain md:px-8 md:py-14",
+            mobileShell ? "mobile-app-main py-4" : "px-4 py-6 pb-24 md:pb-14",
           )}
         >
           {children}

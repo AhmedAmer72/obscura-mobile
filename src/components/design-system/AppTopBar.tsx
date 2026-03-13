@@ -23,7 +23,7 @@ export default function AppTopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-forest/10 bg-sage-1 px-4 sm:px-6",
+        "mobile-app-header sticky top-0 z-30 flex shrink-0 items-center gap-3 border-b border-forest/10 bg-sage-1 sm:gap-4 sm:px-6",
         scrolled && "border-forest/12",
       )}
     >
@@ -51,7 +51,7 @@ export default function AppTopBar({
         </Link>
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-forest/10 bg-white text-forest/45"
+          className="hidden h-9 w-9 items-center justify-center rounded-full border border-forest/10 bg-white text-forest/45 sm:flex"
           aria-label="Theme"
         >
           <Moon className="h-4 w-4" />

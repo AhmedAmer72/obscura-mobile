@@ -1537,3 +1537,86 @@
     animation: none !important;
   }
 }
+
+/* ── Mobile app shell (Capacitor / store build) ─────────────────────────── */
+html.mobile-app {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --mobile-header-bar: 3.5rem;
+  --mobile-subnav-height: 3.25rem;
+  --mobile-tab-bar: 3.25rem;
+  --mobile-header-total: calc(var(--mobile-header-bar) + var(--safe-top));
+  --mobile-tab-total: calc(var(--mobile-tab-bar) + var(--safe-bottom));
+  --mobile-chrome-top: calc(var(--mobile-header-total) + var(--mobile-subnav-height));
+  --mobile-content-pad-bottom: calc(var(--mobile-tab-total) + 0.75rem);
+  --mobile-floating-offset: calc(var(--mobile-tab-total) + 0.5rem);
+  scroll-padding-top: var(--mobile-chrome-top);
+  scroll-padding-bottom: var(--mobile-content-pad-bottom);
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.mobile-app body {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html.mobile-app .mobile-app-header {
+  height: auto;
+  min-height: var(--mobile-header-total);
+  padding-top: var(--safe-top);
+  padding-left: max(1rem, var(--safe-left));
+  padding-right: max(1rem, var(--safe-right));
+}
+
+html.mobile-app .mobile-app-subnav {
+  top: var(--mobile-header-total);
+  padding-left: max(1rem, var(--safe-left));
+  padding-right: max(1rem, var(--safe-right));
+}
+
+html.mobile-app .mobile-app-tab-bar {
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+html.mobile-app .mobile-app-tab-bar__inner {
+  min-height: var(--mobile-tab-bar);
+}
+
+html.mobile-app .mobile-app-content {
+  padding-bottom: var(--mobile-content-pad-bottom);
+}
+
+html.mobile-app .mobile-app-main {
+  padding-left: max(1rem, var(--safe-left));
+  padding-right: max(1rem, var(--safe-right));
+}
+
+html.mobile-app .mobile-app-sticky-below-chrome {
+  top: var(--mobile-chrome-top);
+}
+
+html.mobile-app .mobile-app-floating-above-tab {
+  bottom: var(--mobile-floating-offset);
+}
+
+html.mobile-app .mobile-app-sheet-above-tab {
+  padding-bottom: var(--mobile-tab-total);
+}
+
+html.mobile-app [data-sonner-toaster][data-y-position="bottom"] {
+  bottom: var(--mobile-floating-offset) !important;
+}
+
+html.mobile-app [data-sonner-toaster][data-y-position="top"] {
+  top: calc(var(--safe-top) + 0.5rem) !important;
+}
+
+html.mobile-app [data-radix-toast-viewport] {
+  top: calc(var(--safe-top) + 0.75rem) !important;
+  padding-left: max(1rem, var(--safe-left));
+  padding-right: max(1rem, var(--safe-right));
+}

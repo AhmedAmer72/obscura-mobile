@@ -934,7 +934,7 @@ const CreditPage = () => {
       </div>
 
       {isConnected && tab !== "overview" && (
-        <div className="sticky top-3 z-30 mb-6">
+        <div className="mobile-app-sticky-below-chrome sticky z-30 mb-6">
           <HealthRibbon
             onRepay={(w) => {
               setActiveMarketAddress(w.market.address);
