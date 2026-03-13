@@ -13,11 +13,11 @@ export default function MobileTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-surface-elevated/95 backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-surface-elevated/98 shadow-[0_-8px_24px_rgba(24,40,14,0.06)] backdrop-blur-xl"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
       aria-label="Main navigation"
     >
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-1">
+      <div className="mx-auto flex max-w-lg items-stretch justify-around px-3 pt-0.5">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active =
             pathname === href ||
@@ -29,11 +29,13 @@ export default function MobileTabBar() {
               key={href}
               to={href}
               className={cn(
-                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] transition-colors",
-                active ? "text-brand" : "text-muted-foreground",
+                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors",
+                active
+                  ? "bg-brand/10 text-brand"
+                  : "text-muted-foreground active:bg-muted/50",
               )}
             >
-              <Icon className="size-5" strokeWidth={active ? 2 : 1.65} />
+              <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.65} />
               {label}
             </Link>
           );

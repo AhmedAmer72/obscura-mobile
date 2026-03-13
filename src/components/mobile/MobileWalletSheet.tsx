@@ -34,7 +34,7 @@ export default function MobileWalletSheet({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent
-        className="pb-[max(env(safe-area-inset-bottom),1rem)]"
+        className="mobile-app-drawer-pad pb-[max(env(safe-area-inset-bottom),1rem)]"
         aria-describedby="mobile-wallet-desc"
       >
         <DrawerHeader className="text-left">

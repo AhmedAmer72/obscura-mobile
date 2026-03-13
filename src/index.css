@@ -94,6 +94,15 @@
     padding-right: env(safe-area-inset-right);
   }
 
+  :root {
+    --mobile-tab-bar-height: 3.25rem;
+    --mobile-header-bar-height: 3.5rem;
+    --mobile-subnav-height: 2.75rem;
+    --mobile-tab-bar-pad: calc(var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+    --mobile-header-total: calc(var(--mobile-header-bar-height) + env(safe-area-inset-top, 0px));
+    --mobile-chrome-top: calc(var(--mobile-header-total) + var(--mobile-subnav-height));
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.03em;
@@ -118,6 +127,45 @@
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     letter-spacing: 0.14em;
     text-transform: uppercase;
+  }
+
+  /* Mobile shell — safe areas, sticky chrome, tab bar offsets */
+  .mobile-app-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: var(--mobile-header-bar-height);
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .mobile-app-subnav {
+    position: sticky;
+    top: var(--mobile-header-total);
+    z-index: 20;
+  }
+
+  .mobile-tab-content-offset {
+    padding-bottom: var(--mobile-tab-bar-pad);
+  }
+
+  .mobile-app-sheet-above-tab {
+    bottom: var(--mobile-tab-bar-pad) !important;
+  }
+
+  .mobile-app-floating-above-tab {
+    bottom: calc(var(--mobile-tab-bar-pad) + 0.75rem) !important;
+  }
+
+  .mobile-app-drawer-pad {
+    padding-bottom: calc(var(--mobile-tab-bar-pad) + 0.5rem);
+  }
+
+  .mobile-app-panel-full {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .text-glow {

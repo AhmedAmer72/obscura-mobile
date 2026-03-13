@@ -56,7 +56,7 @@ const AnimatedRoutes = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-sage-1">
+      <div className="min-h-[100dvh] overflow-x-clip bg-sage-1">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
@@ -64,7 +64,7 @@ const AnimatedRoutes = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18, ease: "easeInOut" }}
-            className={showTabBar ? "pb-[calc(4.5rem+env(safe-area-inset-bottom))]" : undefined}
+            className={showTabBar ? "mobile-tab-content-offset" : undefined}
           >
             <Routes location={location}>
               <Route path="/" element={<Navigate to="/pay" replace />} />
