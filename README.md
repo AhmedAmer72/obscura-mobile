@@ -4,6 +4,8 @@ Capacitor shell for **Obscura Pay, Vote, and Credit** — separate from the mark
 
 **Repo:** https://github.com/AhmedAmer72/obscura-mobile
 
+**Full documentation:** [DOCS.md](./DOCS.md) — products, architecture, configuration, build, and release guide.
+
 ## Features
 
 - Bottom tabs: Pay / Vote / Credit

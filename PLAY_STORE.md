@@ -93,7 +93,7 @@ Output: `android\app\build\outputs\bundle\release\app-release.aab`
 
 Use GitHub Releases latest:
 
-`https://github.com/NeoCrafts-cpu/obscura-mobile/releases/latest`
+`https://github.com/AhmedAmer72/obscura-mobile/releases/latest`
 
 Attach **`app-release.apk`** (signed) or **`app-debug.apk`** (testing). Link from your landing page **Mobile suite** section.
 

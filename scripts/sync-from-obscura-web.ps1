@@ -49,7 +49,7 @@ foreach ($p in @("PayPage.tsx", "VotePage.tsx", "CreditPage.tsx", "ContactsPage.
 
 Copy-Item (Join-Path $WebRoot "tailwind.config.ts") (Join-Path $MobileRoot "tailwind.config.ts") -Force
 Copy-Item (Join-Path $WebRoot "src\styles\harmony-workspace-forms.css") (Join-Path $MobileRoot "src\styles\harmony-workspace-forms.css") -Force
-Copy-Item (Join-Path $WebRoot "src\components\brand\*") (Join-Path $MobileRoot "public\brand\") -Force
+Copy-Item (Join-Path $WebRoot "public\brand\*") (Join-Path $MobileRoot "public\brand\") -Force
 Copy-Item (Join-Path $WebRoot "public\favicon.png") (Join-Path $MobileRoot "public\favicon.png") -Force
 Copy-Item (Join-Path $WebRoot "public\apple-touch-icon.png") (Join-Path $MobileRoot "public\apple-touch-icon.png") -Force
 

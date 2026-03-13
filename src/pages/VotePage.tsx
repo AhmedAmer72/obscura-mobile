@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "wagmi";
 import { useIsArbitrumSepolia } from "@/hooks/useWalletSessionChainId";
@@ -9,14 +10,15 @@ import {
   Plus,
   Settings,
   ShieldCheck,
-  UserRound,
   Vault,
   Vote,
   X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { ActivityFeed } from "@/components/harmony/ActivityFeed";
 import { HarmonyAppShell } from "@/components/harmony/HarmonyAppShell";
+import { GovernWorkspaceChrome, GOVERN_TABS, type GovernWorkspaceTab } from "@/components/harmony/GovernWorkspaceChrome";
 import { HarmonyFormCard } from "@/components/harmony/harmony-ui";
 import { VoteHarmonyDashboard } from "@/components/harmony/VoteHarmonyDashboard";
 import {
@@ -47,6 +49,20 @@ type VoteSection = "overview" | "proposals" | "participation" | "advanced";
 type ProposalMode = "browse" | "create" | "vote" | "results";
 type AdvancedMode = "treasury" | "governor";
 
+const PROPOSAL_MODES: ProposalMode[] = ["browse", "create", "vote", "results"];
+
+function isProposalMode(value: string | null): value is ProposalMode {
+  return value != null && PROPOSAL_MODES.includes(value as ProposalMode);
+}
+
+function sectionToGovernTab(section: VoteSection, advancedMode: AdvancedMode): GovernWorkspaceTab {
+  if (section === "overview") return "overview";
+  if (section === "proposals") return "proposals";
+  if (section === "participation") return "rewards";
+  if (advancedMode === "treasury") return "treasury";
+  return "advanced";
+}
+
 const VotePage = () => {
   const { address, isConnected } = useAccount();
   const { data: ownerAddress } = useVoteOwner();
@@ -58,6 +74,8 @@ const VotePage = () => {
   const { isWrongNetwork: wrongNetwork, sessionChainId } = useIsArbitrumSepolia();
   const wrongNetworkConnected = isConnected && wrongNetwork;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [section, setSection] = useState<VoteSection>("overview");
   const [proposalMode, setProposalMode] = useState<ProposalMode>("browse");
   const [advancedMode, setAdvancedMode] = useState<AdvancedMode>("treasury");
@@ -65,55 +83,179 @@ const VotePage = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [delegationSectionOpen, setDelegationSectionOpen] = useState(false);
   const [rewardsSectionOpen, setRewardsSectionOpen] = useState(true);
+  const [historySectionOpen, setHistorySectionOpen] = useState(false);
+
+  const writeVoteUrl = useCallback(
+    (opts: { tab?: GovernWorkspaceTab; mode?: ProposalMode; panel?: "rewards" | "history" | "delegation" }) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.delete("mode");
+          params.delete("panel");
+
+          const tab = opts.tab ?? "overview";
+          if (tab === "overview") {
+            params.delete("tab");
+          } else {
+            params.set("tab", tab);
+          }
+
+          if (tab === "proposals" && opts.mode && opts.mode !== "browse") {
+            params.set("mode", opts.mode);
+          }
+
+          if (tab === "rewards") {
+            params.set("tab", "rewards");
+          } else if (tab === "participation" && opts.panel) {
+            params.set("tab", "participation");
+            params.set("panel", opts.panel);
+          }
+
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    const urlMode = searchParams.get("mode");
+    const urlPanel = searchParams.get("panel");
+
+    if (!urlTab || urlTab === "overview") {
+      setSection("overview");
+      return;
+    }
+
+    if (urlTab === "proposals") {
+      setSection("proposals");
+      setProposalMode(isProposalMode(urlMode) ? urlMode : "browse");
+      return;
+    }
+
+    if (urlTab === "rewards") {
+      setSection("participation");
+      setRewardsSectionOpen(true);
+      setHistorySectionOpen(false);
+      setDelegationSectionOpen(false);
+      return;
+    }
+
+    if (urlTab === "participation") {
+      setSection("participation");
+      setRewardsSectionOpen(urlPanel === "rewards");
+      setHistorySectionOpen(urlPanel === "history");
+      setDelegationSectionOpen(urlPanel === "delegation");
+      return;
+    }
+
+    if (urlTab === "treasury") {
+      setSection("advanced");
+      setAdvancedMode("treasury");
+      return;
+    }
+
+    if (urlTab === "advanced") {
+      setSection("advanced");
+      setAdvancedMode("governor");
+    }
+  }, [searchParams]);
 
   const openParticipationDelegation = useCallback(() => {
     setSection("participation");
     setDelegationSectionOpen(true);
-  }, []);
+    setRewardsSectionOpen(false);
+    setHistorySectionOpen(false);
+    writeVoteUrl({ tab: "participation", panel: "delegation" });
+  }, [writeVoteUrl]);
 
   const openParticipationRewards = useCallback(() => {
     setSection("participation");
     setRewardsSectionOpen(true);
-  }, []);
+    setHistorySectionOpen(false);
+    setDelegationSectionOpen(false);
+    writeVoteUrl({ tab: "rewards" });
+  }, [writeVoteUrl]);
 
-  const openProposals = (mode: ProposalMode = "browse", proposalId?: number | string) => {
-    setSection("proposals");
-    setProposalMode(mode);
-    if (proposalId !== undefined) setJumpProposalId(String(proposalId));
-  };
+  const openProposals = useCallback(
+    (mode: ProposalMode = "browse", proposalId?: number | string) => {
+      setSection("proposals");
+      setProposalMode(mode);
+      if (proposalId !== undefined) setJumpProposalId(String(proposalId));
+      writeVoteUrl({ tab: "proposals", mode });
+    },
+    [writeVoteUrl],
+  );
+
+  const selectGovernTab = useCallback(
+    (tab: GovernWorkspaceTab) => {
+      switch (tab) {
+        case "overview":
+          setSection("overview");
+          writeVoteUrl({ tab: "overview" });
+          break;
+        case "proposals":
+          openProposals("browse");
+          break;
+        case "treasury":
+          setSection("advanced");
+          setAdvancedMode("treasury");
+          writeVoteUrl({ tab: "treasury" });
+          break;
+        case "rewards":
+          setSection("participation");
+          setRewardsSectionOpen(true);
+          setHistorySectionOpen(false);
+          setDelegationSectionOpen(false);
+          writeVoteUrl({ tab: "rewards" });
+          break;
+        case "advanced":
+          setSection("advanced");
+          setAdvancedMode("governor");
+          writeVoteUrl({ tab: "advanced" });
+          break;
+      }
+    },
+    [openProposals, writeVoteUrl],
+  );
+
+  const governTab = sectionToGovernTab(section, advancedMode);
 
   const proposalActions = (
     <>
       <button
         type="button"
         onClick={() => openProposals("vote")}
-        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
-          proposalMode === "browse" || proposalMode === "vote"
-            ? "bg-foreground text-background"
-            : "hairline hover:bg-muted"
-        }`}
+        className={cn(
+          "inline-flex h-9 items-center gap-1.5 px-3 text-xs",
+          proposalMode === "browse" || proposalMode === "vote" ? "dash-btn-primary" : "dash-btn-outline",
+        )}
       >
-        <Vote className="h-4 w-4" />
+        <Vote className="h-3.5 w-3.5" />
         Vote privately
       </button>
       <button
         type="button"
         onClick={() => openProposals("create")}
-        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
-          proposalMode === "create" ? "bg-foreground text-background" : "hairline hover:bg-muted"
-        }`}
+        className={cn(
+          "inline-flex h-9 items-center gap-1.5 px-3 text-xs",
+          proposalMode === "create" ? "dash-btn-primary" : "dash-btn-outline",
+        )}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-3.5 w-3.5" />
         Create
       </button>
       <button
         type="button"
         onClick={() => openProposals("results")}
-        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
-          proposalMode === "results" ? "bg-foreground text-background" : "hairline hover:bg-muted"
-        }`}
+        className={cn(
+          "inline-flex h-9 items-center gap-1.5 px-3 text-xs",
+          proposalMode === "results" ? "dash-btn-primary" : "dash-btn-outline",
+        )}
       >
-        <BarChart3 className="h-4 w-4" />
+        <BarChart3 className="h-3.5 w-3.5" />
         Results
       </button>
     </>
@@ -215,7 +357,7 @@ const VotePage = () => {
       case "proposals":
         return (
           <div className="vote-harmony-panel">
-            <VoteHarmonyTabShell tab="proposals" sub={proposalMode} actions={proposalActions}>
+            <VoteHarmonyTabShell tab="proposals" sub={proposalMode} actions={proposalActions} hideIntro>
               <VoteHarmonySubNav
                 active={proposalMode}
                 onChange={(mode) => openProposals(mode)}
@@ -245,7 +387,7 @@ const VotePage = () => {
       case "participation":
         return (
           <div className="vote-harmony-panel">
-            <VoteHarmonyTabShell tab="participation">
+            <VoteHarmonyTabShell tab="participation" hideIntro>
               <VoteParticipationProfile />
 
               <VoteCollapsibleSection
@@ -261,7 +403,13 @@ const VotePage = () => {
                 </div>
               </VoteCollapsibleSection>
 
-              <VoteCollapsibleSection title="Ballot history" eyebrow="Private verification" defaultOpen={false}>
+              <VoteCollapsibleSection
+                title="Ballot history"
+                eyebrow="Private verification"
+                defaultOpen={false}
+                open={historySectionOpen}
+                onOpenChange={setHistorySectionOpen}
+              >
                 <div className="harmony-form-inner -mx-1">
                   {!isConnected ? (
                     <VoteHarmonyNotConnected message="Connect your wallet to review ballot history and verify votes on this device." />
@@ -305,7 +453,7 @@ const VotePage = () => {
       case "advanced":
         return (
           <div className="vote-harmony-panel">
-            <VoteHarmonyTabShell tab="advanced">
+            <VoteHarmonyTabShell tab="advanced" hideIntro>
               <VoteAdvancedIntro />
               <VoteHarmonySubNav
                 active={advancedMode}
@@ -336,43 +484,32 @@ const VotePage = () => {
     }
   };
 
-  const harmonySidebar = [
-    {
-      key: "overview",
-      label: "Overview",
-      mobileLabel: "Home",
-      icon: Home,
-      active: section === "overview",
-      onClick: () => setSection("overview"),
-    },
-    {
-      key: "proposals",
-      label: "Proposals",
-      mobileLabel: "Vote",
-      icon: Vote,
-      active: section === "proposals",
-      onClick: () => openProposals("vote"),
-    },
-    {
-      key: "participation",
-      label: "Participation",
-      mobileLabel: "Profile",
-      icon: UserRound,
-      active: section === "participation",
-      onClick: () => setSection("participation"),
-    },
-    {
-      key: "advanced",
-      label: "Advanced Governance",
-      mobileLabel: "Advanced",
-      icon: ShieldCheck,
-      active: section === "advanced",
-      onClick: () => setSection("advanced"),
-    },
-  ];
+  const harmonySidebar = GOVERN_TABS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    mobileLabel: item.label,
+    icon: item.icon,
+    active: governTab === item.key,
+    onClick: () => selectGovernTab(item.key),
+  }));
 
   return (
-    <HarmonyAppShell appName="Vote" sidebar={harmonySidebar} searchPlaceholder="Search vote…" onSettingsClick={() => setSettingsOpen(true)}>
+    <HarmonyAppShell
+      sidebar={harmonySidebar}
+      searchPlaceholder="Search proposals…"
+    >
+      <GovernWorkspaceChrome tab={governTab} onSelectTab={selectGovernTab} />
+
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="dash-btn-outline h-9 px-3 text-xs"
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Vote alerts
+        </button>
+      </div>
       {wrongNetworkConnected && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}

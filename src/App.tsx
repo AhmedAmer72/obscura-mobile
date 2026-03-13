@@ -14,6 +14,7 @@ import CreditPage from "./pages/CreditPage.tsx";
 import ContactsPage from "./pages/ContactsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
+import { ValuesRevealProvider } from "@/contexts/ValuesRevealContext";
 import HowCoFHEModal from "@/components/shared/HowCoFHEModal";
 import AppBootstrap from "@/components/mobile/AppBootstrap";
 import MobileTabBar from "@/components/mobile/MobileTabBar";
@@ -23,7 +24,7 @@ const ONBOARDING_KEY = "obscura.onboarding.cofhe.v1";
 
 const queryClient = new QueryClient();
 
-const WORKSPACE_PATHS = new Set(["/pay", "/pay/contacts", "/pay/settings", "/vote", "/credit"]);
+const WORKSPACE_PATHS = new Set(["/pay", "/pay/contacts", "/pay/settings", "/settings", "/vote", "/credit"]);
 
 const normalizePath = (pathname: string) => {
   const base = pathname.split("?")[0].replace(/\/$/, "") || "/";
@@ -56,7 +57,7 @@ const AnimatedRoutes = () => {
 
   return (
     <>
-      <div className="min-h-[100dvh] bg-sage-1">
+      <div className="min-h-[100dvh] bg-sage-1 text-foreground">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
@@ -71,6 +72,7 @@ const AnimatedRoutes = () => {
               <Route path="/pay" element={<PayPage />} />
               <Route path="/pay/contacts" element={<ContactsPage />} />
               <Route path="/pay/settings" element={<SettingsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/vote" element={<VotePage />} />
               <Route path="/credit" element={<CreditPage />} />
               <Route path="*" element={<NotFound />} />
@@ -90,13 +92,15 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <PreferencesProvider>
-          <AppBootstrap>
-            <Toaster />
-            <Sonner position="bottom-center" closeButton richColors />
-            <BrowserRouter>
-              <AnimatedRoutes />
-            </BrowserRouter>
-          </AppBootstrap>
+          <ValuesRevealProvider>
+            <AppBootstrap>
+              <Toaster />
+              <Sonner position="bottom-center" closeButton richColors />
+              <BrowserRouter>
+                <AnimatedRoutes />
+              </BrowserRouter>
+            </AppBootstrap>
+          </ValuesRevealProvider>
         </PreferencesProvider>
       </TooltipProvider>
     </QueryClientProvider>

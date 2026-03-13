@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "./styles/harmony-workspace-forms.css";
+@import "./styles/dashboard-premium.css";
 
 @tailwind base;
 @tailwind components;
@@ -1592,6 +1593,9 @@ html.mobile-app {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+  --dash-forest: 155 42% 28%;
+  --dash-mint: 145 38% 93%;
+  --dash-mint-border: 145 28% 85%;
   --mobile-header-bar: 3.5rem;
   --mobile-subnav-height: 3.25rem;
   --mobile-tab-bar: 3.25rem;

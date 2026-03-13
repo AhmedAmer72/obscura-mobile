@@ -69,3 +69,27 @@ npm run dev
 ```
 
 Open http://localhost:8080 on your phone (same Wi‑Fi) to preview UI — wallet/FHE still need real device testing for best results.
+
+---
+
+## Option D — List APK on the Obscura website (recommended)
+
+Host downloads on your own domain instead of GitHub Releases or app stores.
+
+1. Build the APK (Option B above).
+2. Publish to the web app:
+
+```powershell
+cd E:\AKINDO\obscura-mobile
+npm run publish:web
+```
+
+This copies the APK to `frontend/obscura-os-main/public/downloads/` and updates `mobile-releases.json`.
+
+3. Deploy the web frontend. Users install from **`https://your-domain/download`**.
+
+To publish a specific file or version:
+
+```powershell
+.\scripts\publish-apk-to-web.ps1 -ApkPath "android\app\build\outputs\apk\debug\app-debug.apk" -Version "0.1.0"
+```

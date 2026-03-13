@@ -43,7 +43,7 @@ export function VoteProposalDetailCard({
       : null;
 
   return (
-    <div className="vote-proposal-detail overflow-hidden rounded-2xl border border-border bg-card shadow-md ring-1 ring-border/60">
+    <div className="vote-proposal-detail overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--dash-surface-shadow)] ring-1 ring-border/60">
       <div className="border-b border-border bg-gradient-to-br from-card via-card to-muted/40 px-4 py-5 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

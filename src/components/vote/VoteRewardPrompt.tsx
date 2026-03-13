@@ -39,7 +39,7 @@ export function VoteRewardPrompt({
       className={
         compact
           ? "rounded-xl border border-border bg-white p-4"
-          : "rounded-2xl border-2 border-foreground bg-white p-5 shadow-[0_2px_8px_hsl(145_18%_12%/0.08)]"
+          : "rounded-2xl border-2 border-foreground bg-white p-5 shadow-[var(--dash-surface-shadow)]"
       }
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { LucideIcon, Lock, RadioTower } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { IS_MOBILE_APP } from "@/lib/platform";
 import AppIconRail, { type AppModuleKey } from "./AppIconRail";
 import AppTopBar from "./AppTopBar";
 
@@ -59,19 +58,13 @@ export function ProductShell({
   productLabel?: string;
 }) {
   return (
-    <div className="obscura-app min-h-[100dvh] bg-sage-1 text-forest antialiased md:min-h-screen">
-      <div className="flex min-h-[100dvh] md:min-h-screen">
+    <div className="obscura-app min-h-screen bg-sage-1 text-forest antialiased">
+      <div className="flex min-h-screen">
         <AppIconRail active={module} />
         {sidebar}
         <div className="flex min-w-0 flex-1 flex-col">
           <AppTopBar searchPlaceholder={searchPlaceholder} />
-          <main
-            className={cn(
-              "mx-auto w-full flex-1 py-5 sm:px-6 lg:px-8",
-              IS_MOBILE_APP ? "mobile-app-main pb-6" : "px-4 pb-20",
-              maxWidth,
-            )}
-          >
+          <main className={cn("mx-auto w-full flex-1 px-4 py-6 pb-20 sm:px-6 lg:px-8", maxWidth)}>
             {children}
           </main>
         </div>
