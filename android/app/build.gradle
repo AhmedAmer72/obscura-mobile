@@ -1,5 +1,15 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def ciVersionCode = System.getenv("VERSION_CODE")
+def resolvedVersionCode = ciVersionCode ? ciVersionCode.toInteger() : 1
+def resolvedVersionName = ciVersionCode ? "1.0.${ciVersionCode}" : "1.0"
+
 android {
     namespace = "finance.obscura.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +17,8 @@ android {
         applicationId "finance.obscura.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +26,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def envStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            def envKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+            def envKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            def envStoreFile = file("obscura-release.keystore")
+
+            if (envStorePassword && envKeyAlias && envKeyPassword && envStoreFile.exists()) {
+                storeFile envStoreFile
+                storePassword envStorePassword
+                keyAlias envKeyAlias
+                keyPassword envKeyPassword
+            } else if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
