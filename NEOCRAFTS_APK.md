@@ -17,15 +17,17 @@ git push -u neocrafts master
 **Or import** (no local push): NeoCrafts-cpu → **New repository** → **Import a repository** →  
 `https://github.com/AhmedAmer72/obscura-mobile`
 
-## Build the APK
+## Build the APK / AAB
 
-1. Open **Actions** → **Android build** → **Run workflow** (or push to `master`).
-2. Wait for the green check (~5–8 min).
-3. Download the APK:
-   - **Releases:** `https://github.com/NeoCrafts-cpu/obscura-mobile/releases` (latest `apk-*` tag), or
-   - **Artifacts:** open the workflow run → **obscura-mobile-debug-apk**.
+1. Add [signing secrets](./PLAY_STORE.md) on the repo for release `.aab` builds.
+2. Open **Actions** → **Android build** → **Run workflow** (or push to `master`).
+3. Wait for the green check (~5–8 min).
+4. Download from **Releases** (`mobile-*` tag) or **Artifacts**:
+   - `app-debug.apk` — quick testing
+   - `app-release.aab` — upload to Google Play
+   - `app-release.apk` — signed direct install
 
-APK file: `app-debug.apk`
+Public link: `https://github.com/NeoCrafts-cpu/obscura-mobile/releases/latest`
 
 ## CLI (after `gh auth login` as NeoCrafts-cpu)
 
