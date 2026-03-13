@@ -25,11 +25,15 @@ const arbSepoliaTransports = [
   http('https://arbitrum-sepolia.gateway.tenderly.co', { batch: true, retryCount: 1, timeout: 15_000 }),
 ];
 
+const wcProjectId =
+  (import.meta as { env?: Record<string, string> }).env?.VITE_WALLETCONNECT_PROJECT_ID ??
+  "e6b113efbc1f45b94d886018c409c597";
+
 export const config = createConfig({
   chains: [arbitrumSepolia, sepolia],
   connectors: [
     injected(),
-    walletConnect({ projectId: 'e6b113efbc1f45b94d886018c409c597' }),
+    walletConnect({ projectId: wcProjectId, showQrModal: true }),
   ],
   transports: {
     [arbitrumSepolia.id]: fallback(arbSepoliaTransports, { rank: false, retryCount: 1 }),

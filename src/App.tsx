@@ -15,6 +15,7 @@ import ContactsPage from "./pages/ContactsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import HowCoFHEModal from "@/components/shared/HowCoFHEModal";
+import AppBootstrap from "@/components/mobile/AppBootstrap";
 import MobileTabBar from "@/components/mobile/MobileTabBar";
 import { IS_MOBILE_APP } from "@/lib/platform";
 
@@ -89,11 +90,13 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <PreferencesProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AnimatedRoutes />
-          </BrowserRouter>
+          <AppBootstrap>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </AppBootstrap>
         </PreferencesProvider>
       </TooltipProvider>
     </QueryClientProvider>

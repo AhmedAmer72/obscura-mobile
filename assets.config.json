@@ -1,0 +1,8 @@
+{
+  "iconBackgroundColor": "#EEF3EA",
+  "iconBackgroundColorDark": "#18280E",
+  "splashBackgroundColor": "#EEF3EA",
+  "splashBackgroundColorDark": "#18280E",
+  "logoSplashScale": 0.3,
+  "logoSplashTargetWidth": 200
+}

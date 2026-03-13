@@ -15,10 +15,16 @@ export async function initNativeShell() {
 
     const { App } = await import("@capacitor/app");
     const { StatusBar, Style } = await import("@capacitor/status-bar");
-    const { SplashScreen } = await import("@capacitor/splash-screen");
+    const { Keyboard, KeyboardResize } = await import("@capacitor/keyboard");
 
     await StatusBar.setStyle({ style: Style.Light });
-    await SplashScreen.hide();
+    await StatusBar.setBackgroundColor({ color: "#EEF3EA" });
+
+    try {
+      await Keyboard.setResizeMode({ mode: KeyboardResize.Body });
+    } catch {
+      // iOS may not support all resize modes
+    }
 
     App.addListener("backButton", ({ canGoBack }) => {
       if (canGoBack) {
@@ -29,5 +35,16 @@ export async function initNativeShell() {
     });
   } catch {
     nativePlatform = false;
+  }
+}
+
+export async function hideNativeSplash() {
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (!Capacitor.isNativePlatform()) return;
+    const { SplashScreen } = await import("@capacitor/splash-screen");
+    await SplashScreen.hide();
+  } catch {
+    // web preview
   }
 }

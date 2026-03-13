@@ -2,13 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { logEnvHealthOnce } from "./lib/envHealth";
-import { initNativeShell, isNativePlatform } from "./lib/platform";
+import { isNativePlatform } from "./lib/platform";
 
 logEnvHealthOnce();
 
-async function bootstrap() {
-  await initNativeShell();
-
+async function registerWebPush() {
   if ("serviceWorker" in navigator && !isNativePlatform()) {
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data?.type !== "OBSCURA_PUSH_RECEIVED") return;
@@ -35,11 +33,9 @@ async function bootstrap() {
       .register("/sw.js")
       .then((registration) => {
         registration.update().catch((err) => console.warn("[SW] update check failed:", err));
-
         if (registration.waiting) {
           registration.waiting.postMessage({ type: "SKIP_WAITING" });
         }
-
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;
           if (!worker) return;
@@ -54,8 +50,7 @@ async function bootstrap() {
         console.warn("[SW] registration failed:", err);
       });
   }
-
-  createRoot(document.getElementById("root")!).render(<App />);
 }
 
-void bootstrap();
+void registerWebPush();
+createRoot(document.getElementById("root")!).render(<App />);
