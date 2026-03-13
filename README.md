@@ -2,30 +2,44 @@
 
 Capacitor shell for **Obscura Pay, Vote, and Credit** — separate from the marketing website in `OBSCURA-main/frontend/obscura-os-main`.
 
+**Repo:** https://github.com/AhmedAmer72/obscura-mobile
+
+## Features
+
+- Bottom tabs: Pay / Vote / Credit
+- In-app sub-navigation as horizontal chips (no double bottom bar)
+- Branded boot loading screen + native splash (sage `#EEF3EA`)
+- Mobile wallet connect sheet (WalletConnect-first on native)
+- Env setup screen when contract addresses are missing
+- Keyboard resize + safe areas on native
+
 ## Develop (browser)
 
 ```bash
 npm install
+cp .env.example .env   # fill VITE_* from web app / Vercel
 npm run dev
 ```
 
-Opens at `http://localhost:8080` — defaults to `/pay`.
-
-## Build native projects
+## Build native
 
 ```bash
 npm run cap:sync
 ```
 
-- Android: `npm run cap:android` (requires Android Studio) or use CI.
-- iOS: `npm run cap:ios` (requires Mac + Xcode) or use Codemagic / GitHub Actions.
+- Android APK via GitHub Actions → **Actions** → **Android build**
+- Local: `npm run cap:android` (requires Android Studio)
 
-## Environment
+## Native icons (optional)
 
-Add a `.env` file with the same `VITE_*` keys as the web app (relay URL, Supabase, contract addresses).
+Add `resources/icon.png` (1024×1024), then:
 
-## Scope
+```bash
+npm run assets:generate
+```
 
-- Pay, Vote, Credit workspace routes
-- Bottom tab navigation
-- No marketing landing page
+See [resources/README.md](resources/README.md).
+
+## Device testing
+
+Use [DEVICE_QA.md](DEVICE_QA.md) on a real phone before store submission.
