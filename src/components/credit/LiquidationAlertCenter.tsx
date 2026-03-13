@@ -56,7 +56,7 @@ export default function LiquidationAlertCenter() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="mobile-app-floating-above-tab fixed inset-x-3 z-40 lg:bottom-4 lg:inset-x-auto lg:right-4 lg:max-w-sm"
+        className="fixed bottom-16 lg:bottom-4 inset-x-3 lg:inset-x-auto lg:right-4 lg:max-w-sm z-40"
       >
         <div className="rounded-xl border border-red-500/50 bg-red-500/15 backdrop-blur-xl p-3 flex items-start gap-3 shadow-2xl shadow-red-500/20">
           <div className="w-8 h-8 rounded-lg bg-red-500/25 flex items-center justify-center flex-shrink-0">
