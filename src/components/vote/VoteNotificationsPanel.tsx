@@ -14,7 +14,7 @@ const VOTE_NOTIFICATION_TYPES = [
 
 type BusyAction = "enable" | "repair" | "test" | "vote" | null;
 
-export function VoteNotificationsPanel() {
+export function VoteNotificationsPanel({ embedded = false }: { embedded?: boolean }) {
   const { prefs, isLoading, pushSupported, permission, serviceWorkerReady, enable, repair, testPush, savePrefs } = useNotificationPrefs();
   const [busy, setBusy] = useState<BusyAction>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -48,18 +48,20 @@ export function VoteNotificationsPanel() {
     await savePrefs({ events: [...existing, ...VOTE_NOTIFICATION_TYPES] });
   };
 
-  return (
-    <VoteHarmonyPanelCard title="Vote notifications" eyebrow="Shared alerts">
-      <div className="space-y-4 text-sm">
-        <div className="grid grid-cols-[1fr_auto] gap-y-2 text-xs text-muted-foreground">
-          <span>Push alerts</span>
-          <span className="font-mono text-foreground/70">{isLoading ? "loading" : prefs?.push_enabled ? "enabled" : "off"}</span>
-          <span>Browser permission</span>
-          <span className="font-mono text-foreground/70">{permission}</span>
-          <span>Service worker</span>
-          <span className="font-mono text-foreground/70">{serviceWorkerReady ? "ready" : "starting"}</span>
-          <span>Vote event types</span>
-          <span className="font-mono text-foreground/70">{voteEventsEnabled ? "enabled" : "custom"}</span>
+  const body = (
+    <div className="space-y-5 text-sm">
+        <div className="rounded-xl border border-border bg-white p-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-3">Alert status</p>
+          <div className="grid grid-cols-[1fr_auto] gap-y-3 text-sm">
+            <span className="text-muted-foreground">Push alerts</span>
+            <span className="font-medium text-foreground">{isLoading ? "…" : prefs?.push_enabled ? "Enabled" : "Off"}</span>
+            <span className="text-muted-foreground">Browser permission</span>
+            <span className="font-medium capitalize text-foreground">{permission}</span>
+            <span className="text-muted-foreground">Service worker</span>
+            <span className="font-medium text-foreground">{serviceWorkerReady ? "Ready" : "Starting"}</span>
+            <span className="text-muted-foreground">Vote events</span>
+            <span className="font-medium text-foreground">{voteEventsEnabled ? "Enabled" : "Custom"}</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -67,7 +69,7 @@ export function VoteNotificationsPanel() {
             type="button"
             disabled={!pushSupported || busy !== null}
             onClick={() => void run("enable", enable)}
-            className="btn-pay btn-pay-ghost justify-center disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/40 disabled:opacity-50"
           >
             {busy === "enable" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
             Enable push
@@ -76,7 +78,7 @@ export function VoteNotificationsPanel() {
             type="button"
             disabled={!pushSupported || busy !== null}
             onClick={() => void run("vote", focusVoteEvents)}
-            className="btn-pay btn-pay-ghost justify-center disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-foreground px-4 text-sm font-semibold text-background disabled:opacity-50"
           >
             {busy === "vote" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
             Save Vote alerts
@@ -85,7 +87,7 @@ export function VoteNotificationsPanel() {
             type="button"
             disabled={!pushSupported || busy !== null}
             onClick={() => void run("repair", repair)}
-            className="btn-pay btn-pay-ghost justify-center disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/40 disabled:opacity-50"
           >
             {busy === "repair" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wrench className="h-3.5 w-3.5" />}
             Repair browser
@@ -94,14 +96,14 @@ export function VoteNotificationsPanel() {
             type="button"
             disabled={!pushSupported || busy !== null}
             onClick={() => void run("test", testPush)}
-            className="btn-pay btn-pay-ghost justify-center disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/40 disabled:opacity-50"
           >
             {busy === "test" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BellRing className="h-3.5 w-3.5" />}
             Test push
           </button>
         </div>
 
-        <details className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2">
+        <details className="rounded-xl border border-border bg-white px-4 py-3">
           <summary className="cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground">
             Vote alert categories
           </summary>
@@ -123,6 +125,13 @@ export function VoteNotificationsPanel() {
           </p>
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <VoteHarmonyPanelCard title="Vote notifications" eyebrow="Shared alerts">
+      {body}
     </VoteHarmonyPanelCard>
   );
 }

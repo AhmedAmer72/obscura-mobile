@@ -59,16 +59,16 @@ export function ProductShell({
   productLabel?: string;
 }) {
   return (
-    <div className="obscura-app min-h-[100dvh] bg-sage-1 text-forest antialiased">
-      <div className="flex min-h-[100dvh]">
+    <div className="obscura-app min-h-[100dvh] bg-sage-1 text-forest antialiased md:min-h-screen">
+      <div className="flex min-h-[100dvh] md:min-h-screen">
         <AppIconRail active={module} />
         {sidebar}
         <div className="flex min-w-0 flex-1 flex-col">
           <AppTopBar searchPlaceholder={searchPlaceholder} />
           <main
             className={cn(
-              "mx-auto w-full flex-1 px-4 sm:px-6 lg:px-8",
-              IS_MOBILE_APP ? "py-4" : "py-6 pb-20",
+              "mx-auto w-full flex-1 py-5 sm:px-6 lg:px-8",
+              IS_MOBILE_APP ? "mobile-app-main pb-6" : "px-4 pb-20",
               maxWidth,
             )}
           >

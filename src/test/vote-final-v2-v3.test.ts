@@ -20,9 +20,11 @@ describe("Vote V2/V3 information architecture", () => {
     expect(votePage).toContain('key: "proposals"');
     expect(votePage).toContain('key: "participation"');
     expect(votePage).toContain('key: "advanced"');
-    expect(votePage).not.toContain('key: "treasury"');
-    expect(votePage).not.toContain('key: "delegate"');
-    expect(votePage).not.toContain('key: "governor"');
+    const sidebarBlock = votePage.split("const harmonySidebar = [")[1]?.split("];")[0] ?? "";
+    expect(sidebarBlock).not.toContain('key: "treasury"');
+    expect(sidebarBlock).not.toContain('key: "delegate"');
+    expect(sidebarBlock).not.toContain('key: "governor"');
+    expect(votePage).toContain('key: "advanced"');
     expect(shell).toContain('"proposals" | "participation" | "advanced"');
   });
 
@@ -36,7 +38,8 @@ describe("Vote V2/V3 information architecture", () => {
     expect(dashboard).not.toContain("Institutional governance");
     expect(dashboard).not.toContain("OBS · sealed");
     expect(dashboard).not.toContain("Treasury");
-    expect(dashboard).toContain("Cast private votes. Change your mind before the deadline. Only final totals are revealed.");
+    expect(dashboard).toContain("Cast private votes on Arbitrum Sepolia");
+    expect(dashboard).toContain("Only aggregate totals are revealed");
   });
 
   it("makes voting the primary proposal path while preserving explicit reveal", () => {
@@ -81,8 +84,9 @@ describe("Vote V2/V3 information architecture", () => {
     const proposalList = readSource("components/vote/ProposalList.tsx");
     const rewards = readSource("components/vote/RewardsPanel.tsx");
 
-    expect(dashboard).toContain("hidden gap-3 md:grid");
-    expect(dashboard).toContain("Review proposals");
+    expect(dashboard).toContain("vh.kpiGrid");
+    expect(dashboard).toContain("min-h-[44px]");
+    expect(dashboard).toContain("Browse proposals");
     expect(proposalList).toContain('initialFilter = "active"');
     expect(proposalList).toContain("Showing {statusFilter} proposals first");
     expect(rewards).toContain("Reward claims appear after you vote privately");

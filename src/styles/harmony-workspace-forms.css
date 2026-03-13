@@ -527,3 +527,69 @@
   background-color: hsl(var(--accent) / 0.12) !important;
   border-color: hsl(var(--accent) / 0.35) !important;
 }
+
+/* Vote UX polish wave — stronger section separation on ivory Harmony canvas */
+.obscura-app .vote-harmony-panel .harmony-form-inner {
+  padding-top: 0.25rem;
+}
+
+.obscura-app .vote-harmony-panel input.pay-input,
+.obscura-app .vote-harmony-panel select.pay-select,
+.obscura-app .vote-harmony-panel textarea.pay-input {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.obscura-app .vote-harmony-panel input.pay-input:focus,
+.obscura-app .vote-harmony-panel select.pay-select:focus,
+.obscura-app .vote-harmony-panel textarea.pay-input:focus {
+  border-color: hsl(var(--accent) / 0.55);
+  box-shadow: 0 0 0 3px hsl(var(--accent) / 0.12);
+}
+
+@media (max-width: 639px) {
+  .obscura-app .vote-harmony-panel .rounded-2xl.hairline.bg-card {
+    padding: 1rem;
+  }
+}
+
+.obscura-app .vote-harmony-panel .vote-proposal-detail {
+  margin-bottom: 0.25rem;
+}
+
+.obscura-app .vote-harmony-panel .vote-choice-stack {
+  margin-top: 0.25rem;
+}
+
+.obscura-app .vote-harmony-panel .vote-submit-zone {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
+  padding-bottom: 0.25rem;
+  background: linear-gradient(to top, hsl(var(--background)) 70%, transparent);
+}
+
+/* Vote UX institutional polish — white cards, stronger CTAs, judge-readable hierarchy */
+.obscura-app .vote-harmony-panel {
+  color: hsl(var(--foreground));
+}
+
+.obscura-app .vote-harmony-panel .btn-pay-emerald,
+.obscura-app .vote-harmony-panel .btn-pay-amber,
+.obscura-app .vote-harmony-panel button.bg-foreground {
+  min-height: 2.75rem !important;
+  font-weight: 600 !important;
+}
+
+.obscura-app .vote-harmony-panel .rounded-2xl.hairline.bg-card,
+.obscura-app .vote-harmony-panel .harmony-form-inner > .pay-card {
+  background: #fff !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 1px 3px hsl(145 18% 12% / 0.06) !important;
+}
+
+.obscura-app .vote-harmony-panel h1,
+.obscura-app .vote-harmony-panel h2,
+.obscura-app .vote-harmony-panel h3.font-display {
+  color: hsl(var(--foreground)) !important;
+}
