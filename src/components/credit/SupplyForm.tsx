@@ -21,6 +21,7 @@ import { useOcUSDCBalance } from "@/hooks/useOcUSDCBalance";
 import EncryptedValue from "@/components/shared/EncryptedValue";
 import FHEStepper from "@/components/shared/FHEStepper";
 import PercentChips from "@/components/shared/PercentChips";
+import { BETA_POOL_LABEL } from "@/hooks/useBetaBorrowLimit";
 
 interface Props {
   market: CreditMarketMeta;
@@ -78,7 +79,7 @@ const SupplyForm = ({ market, markets, onSelect, onRefresh }: Props) => {
   return (
     <div className="grid gap-3">
       {/* Position summary */}
-      <div className="grid grid-cols-2 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1">
         <EncryptedValue
           label="Your Supply"
           value={pos.mySupply}
@@ -163,8 +164,8 @@ const SupplyForm = ({ market, markets, onSelect, onRefresh }: Props) => {
       {/* Supply privacy note */}
       {tab === "supply" && (
         <p className="text-[11px] text-white/40">
-          Two-step FHE: {market.loanSymbol} is transferred, then supply shares are credited.
-          Your position amount is private on-chain.
+          Private supply adds real {market.loanSymbol} to {market.isCanonical ? BETA_POOL_LABEL : "this market"} in two wallet-confirmed steps.
+          Your lender position stays private.
         </p>
       )}
 
@@ -178,7 +179,7 @@ const SupplyForm = ({ market, markets, onSelect, onRefresh }: Props) => {
         ) : (
           <ArrowDownToLine className="w-4 h-4" />
         )}
-        {tab === "supply" ? "Supply to market" : "Withdraw from market"}
+        {tab === "supply" ? (market.isCanonical ? "Supply to Beta Pool" : "Supply to market") : "Withdraw from market"}
       </button>
 
       <FHEStepper status={fheStatus.status} error={fheStatus.error} />

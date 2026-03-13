@@ -69,6 +69,11 @@ function exportCSV(title: string, options: string[], tallies: TallyResultData[])
   URL.revokeObjectURL(url);
 }
 
+function formatWriteError(error: unknown, fallback: string): string {
+  const txError = error as { shortMessage?: string; cause?: { reason?: string }; message?: string };
+  return txError.shortMessage ?? txError.cause?.reason ?? txError.message ?? fallback;
+}
+
 function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: TallyFilter }) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -80,6 +85,7 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
   const { writeContractAsync, isPending: isFinalizePending } = useWriteContract();
   const [error, setError] = useState<string | null>(null);
   const [finalizeTxHash, setFinalizeTxHash] = useState<string | null>(null);
+  const [isFinalizeConfirming, setIsFinalizeConfirming] = useState(false);
 
   // Must be called before any early return to satisfy Rules of Hooks
   const now = useChainTime();
@@ -138,11 +144,16 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
         maxPriorityFeePerGas,
       });
       setFinalizeTxHash(hash);
-      setTimeout(() => refetchProposal(), 3000);
-    } catch (err: any) {
-      // Prefer the decoded revert reason (shortMessage) over raw message
-      const msg: string = err.shortMessage ?? err.cause?.reason ?? err.message ?? "Finalization failed";
-      setError(msg);
+      setIsFinalizeConfirming(true);
+      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") {
+        throw new Error("Finalize transaction reverted");
+      }
+      await refetchProposal();
+    } catch (err: unknown) {
+      setError(formatWriteError(err, "Finalization failed"));
+    } finally {
+      setIsFinalizeConfirming(false);
     }
   }
 
@@ -150,8 +161,8 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
     setError(null);
     try {
       await decryptTally();
-    } catch (err: any) {
-      setError(err.message ?? "Decryption failed");
+    } catch (err: unknown) {
+      setError(formatWriteError(err, "Decryption failed"));
     }
   }
 
@@ -211,31 +222,14 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
           {quorumMet && isCreator && (
           <motion.button
             onClick={handleFinalize}
-            disabled={isFinalizePending}
+            disabled={isFinalizePending || isFinalizeConfirming}
             whileHover={{ scale: 1.005 }}
             whileTap={{ scale: 0.99 }}
             className="btn-pay btn-pay-amber w-full py-2.5"
           >
             <Unlock className="w-3.5 h-3.5 inline mr-2" />
-            {isFinalizePending ? "Finalizing..." : "Finalize My Proposal"}
+            {isFinalizePending ? "Sign in Wallet..." : isFinalizeConfirming ? "Confirming..." : "Finalize My Proposal"}
           </motion.button>
-          )}
-          {finalizeTxHash && (
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                TX:{" "}
-                <a
-                  href={`https://sepolia.arbiscan.io/tx/${finalizeTxHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground hover:underline inline-flex items-center gap-1"
-                >
-                  {finalizeTxHash.slice(0, 10)}...{finalizeTxHash.slice(-8)}
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-
-            </div>
           )}
         </div>
       )}
@@ -243,6 +237,21 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
       {isFinalized && (
         <div className="text-xs text-green-400">
           ✓ Finalized — tally is publicly decryptable.
+        </div>
+      )}
+
+      {finalizeTxHash && (
+        <div className="text-xs text-muted-foreground flex items-center gap-1">
+          Finalize TX:{" "}
+          <a
+            href={`https://sepolia.arbiscan.io/tx/${finalizeTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline inline-flex items-center gap-1"
+          >
+            {finalizeTxHash.slice(0, 10)}...{finalizeTxHash.slice(-8)}
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       )}
 
@@ -333,10 +342,8 @@ function TallyResult({ proposalId, filter }: { proposalId: bigint; filter: Tally
           <div className="flex items-start gap-2 p-3 bg-secondary/20 rounded-md border border-border">
             <ShieldCheck className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
             <div className="text-[11px] text-muted-foreground/70 leading-relaxed">
-              These tallies are publicly decryptable via{" "}
-              <span className="font-mono text-foreground">FHE.allowPublic</span> — called at finalization.
-              Individual ballots remain as encrypted handles on-chain and{" "}
-              <span className="text-foreground/80">can never be decrypted</span>.
+              These are aggregate totals made public at finalization. Individual ballots remain encrypted handles on-chain and{" "}
+              <span className="text-foreground/80">are never revealed</span>.
             </div>
           </div>
         </div>
@@ -391,8 +398,7 @@ export default function TallyReveal() {
       </div>
 
       <div className="text-[12px] text-muted-foreground/55 leading-relaxed border-l-2 border-emerald-500/20 pl-3">
-        After finalization, the aggregate tally becomes publicly decryptable via FHE.allowPublic().
-        Individual votes remain permanently encrypted. Export results to CSV after reveal.
+        After finalization, anyone can reveal aggregate totals. Individual votes remain permanently encrypted.
       </div>
 
       {/* Filter tabs */}

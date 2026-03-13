@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDownToLine, ArrowUpRight, Layers, ShieldAlert, WalletCards } from "lucide-react";
+import { ArrowDownToLine, ArrowUpRight, Eye, EyeOff, Landmark, Layers, Loader2, ShieldAlert, WalletCards } from "lucide-react";
 import { CreditReputationPanel } from "@/components/credit/CreditReputationPanel";
-import { HarmonyEncryptedValue } from "@/components/harmony/HarmonyEncryptedValue";
 import {
   HarmonyKpi,
   HarmonyKpiGrid,
@@ -11,15 +11,69 @@ import {
 import type { CreditMarketMeta } from "@/hooks/useCreditMarkets";
 import type { CreditVaultMeta } from "@/hooks/useCreditVaults";
 import { useUtilizationApr } from "@/hooks/useCredit";
+import { useOcUSDCBalance } from "@/hooks/useOcUSDCBalance";
+import { BETA_LIQUIDITY_TARGET, BETA_POOL_LABEL, formatBetaOcusdc } from "@/hooks/useBetaBorrowLimit";
 
 function formatUsd(value?: bigint) {
   if (value === undefined) return "—";
-  return `$${(Number(value) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const amount = Number(value) / 1e6;
+  const maximumFractionDigits = amount > 0 && amount < 1 ? 6 : 2;
+  return `$${amount.toLocaleString(undefined, { maximumFractionDigits })}`;
 }
 
 function formatPercentBps(value?: bigint | number) {
   if (value === undefined) return "—";
   return `${(Number(value) / 100).toFixed(1)}%`;
+}
+
+function formatOcusdc(value: bigint) {
+  const amount = Number(value) / 1e6;
+  const maximumFractionDigits = amount > 0 && amount < 1 ? 6 : 4;
+  return amount.toLocaleString(undefined, { maximumFractionDigits });
+}
+
+function CreditPrivateBalanceKpi() {
+  const { decrypted, busy, error, reveal } = useOcUSDCBalance();
+  const [revealed, setRevealed] = useState(false);
+  const display = decrypted === null ? null : formatOcusdc(decrypted);
+
+  const handleReveal = async () => {
+    if (display !== null) {
+      setRevealed(true);
+      return;
+    }
+    setRevealed(false);
+    try {
+      const plain = await reveal();
+      setRevealed(plain !== null);
+    } catch {
+      setRevealed(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <span className="font-display text-2xl tabular-nums">
+          {revealed && display !== null ? display : <span className="cipher-shimmer text-muted-foreground">••••••</span>}
+        </span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">ocUSDC</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => revealed ? setRevealed(false) : void handleReveal()}
+          disabled={busy}
+          className="inline-flex h-7 items-center gap-1.5 rounded-full hairline px-2.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+          {busy ? "Decrypting" : revealed ? "Hide" : "Reveal"}
+        </button>
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">Pay balance</span>
+      </div>
+      {error && <p className="text-xs leading-relaxed text-destructive/80">{error}</p>}
+    </div>
+  );
 }
 
 function RiskRow({ k, v }: { k: string; v: string }) {
@@ -33,7 +87,7 @@ function RiskRow({ k, v }: { k: string; v: string }) {
 
 export function CreditHarmonyOverview({
   markets,
-  vaults,
+  vaults: _vaults,
   onSupply,
   onBorrow,
   onOpenVault,
@@ -74,7 +128,7 @@ export function CreditHarmonyOverview({
             </button>
             <button type="button" onClick={onOpenVault} className="inline-flex h-10 items-center gap-2 rounded-full hairline px-4 text-sm">
               <Layers className="h-3.5 w-3.5" />
-              Open vault
+              Earn
             </button>
           </>
         }
@@ -82,8 +136,8 @@ export function CreditHarmonyOverview({
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <HarmonyKpiGrid>
-          <HarmonyKpi label="Private position">
-            <HarmonyEncryptedValue value="$—" size="md" />
+          <HarmonyKpi label="Private balance">
+            <CreditPrivateBalanceKpi />
           </HarmonyKpi>
           <HarmonyKpi label="Borrow APY">
             <span className="font-display text-3xl">{borrowApy}</span>
@@ -91,11 +145,37 @@ export function CreditHarmonyOverview({
           <HarmonyKpi label="Utilization">
             <span className="font-display text-3xl text-[hsl(var(--success))]">{formatPercentBps(utilizationBps)}</span>
           </HarmonyKpi>
-          <HarmonyKpi label="Pool liquidity">
+          <HarmonyKpi label="Beta liquidity">
             <span className="font-display text-3xl">{formatUsd(availableLiquidity)}</span>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Live borrowable</p>
           </HarmonyKpi>
         </HarmonyKpiGrid>
       </motion.div>
+
+      <div className="mt-5 rounded-2xl hairline bg-card p-5">
+        <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Early Access Liquidity</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Landmark className="h-4 w-4 text-[hsl(var(--success))]" />
+              <p className="font-display text-2xl">{BETA_POOL_LABEL}</p>
+            </div>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              Real Pay-backed ocUSDC supplied from the current treasury wallet. No synthetic TVL, no extra market, no faucet path.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-1">
+            <div className="rounded-xl bg-muted/50 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Beta target</p>
+              <p className="mt-1 font-mono text-sm text-foreground">{formatBetaOcusdc(BETA_LIQUIDITY_TARGET)} ocUSDC</p>
+            </div>
+            <div className="rounded-xl bg-muted/50 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Narrative</p>
+              <p className="mt-1 text-sm text-muted-foreground">Private money -&gt; private reputation -&gt; private credit -&gt; private governance.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl hairline bg-card p-6 lg:col-span-2">
@@ -110,31 +190,31 @@ export function CreditHarmonyOverview({
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Supplied</p>
               <p className="mt-2 font-display text-3xl cipher-shimmer text-muted-foreground">••••••</p>
               <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Encrypted on-chain
+                ocUSDC · encrypted
               </p>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Borrow</p>
               <p className="mt-2 font-display text-3xl cipher-shimmer text-muted-foreground">••••••</p>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Reveal from Position
+                ocUSDC · reveal in Position
               </p>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Collateral</p>
               <p className="mt-2 font-display text-3xl cipher-shimmer text-muted-foreground">••••••</p>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Hidden by default
+                ocUSDC · hidden by default
               </p>
             </div>
           </div>
           <div className="mt-8 rounded-xl bg-muted/50 p-4">
             <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-muted-foreground">Next best step</span>
-              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">Borrow workspace</span>
+              <span className="text-muted-foreground">Primary path</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">Direct market</span>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Start in Borrow to source Pay-backed private USDC, approve the router, and submit a single encrypted borrow flow.
+              Use Pay-backed ocUSDC from Pay, build reputation through Pay/Credit/Vote, then borrow from the beta pool after settlement.
             </p>
           </div>
         </div>
@@ -146,7 +226,7 @@ export function CreditHarmonyOverview({
           </div>
           <p className="mt-4 font-display text-3xl leading-tight">Risk is managed without exposing position size.</p>
           <p className="mt-3 text-sm opacity-70">
-            Liquidations and score changes flow through the shared activity worker and generic notifications.
+            Reputation-aware limits keep early liquidity usable while encrypted positions remain hidden by default.
           </p>
           <div className="mt-6 space-y-2 font-mono text-[11px]">
             <RiskRow k="Feed" v="Supabase realtime" />
@@ -161,7 +241,7 @@ export function CreditHarmonyOverview({
         <CreditReputationPanel compact />
       </div>
 
-      <HarmonySection title="Borrow market" hint="Live public pool metrics. Personal balances stay encrypted.">
+      <HarmonySection title="Beta Liquidity Pool" hint="Live public pool metrics from the canonical Pay-backed ocUSDC market. Wallet balances stay encrypted until reveal.">
         <div className="grid gap-3 md:hidden">
           {markets.map((m) => (
             <div key={m.address} className="rounded-2xl hairline bg-card p-5">
@@ -221,34 +301,23 @@ export function CreditHarmonyOverview({
         </div>
       </HarmonySection>
 
-      {vaults.length > 0 && (
-        <HarmonySection title="Vaults" hint="Curated allocation across encrypted markets.">
-          <div className="grid gap-6 md:grid-cols-2">
-            {vaults.slice(0, 2).map((v) => (
-              <div key={v.address} className="rounded-2xl hairline bg-card p-6">
-                <div className="flex items-center justify-between">
-                  <Layers className="h-5 w-5 text-accent" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Vault</span>
-                </div>
-                <p className="mt-4 font-display text-2xl">{v.name}</p>
-                <div className="mt-6 flex items-end justify-between">
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Net APY</p>
-                    <p className="mt-1 font-display text-3xl">—</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onOpenVault}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-sm text-background"
-                  >
-                    Deposit <ArrowUpRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+      <HarmonySection title="Earn options" hint="Direct supply is the beta treasury path. Vaults live in Earn when you want curated allocation.">
+        <div className="rounded-2xl hairline bg-card p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Pay-backed ocUSDC</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Move to Earn for direct supply into the beta pool, withdrawals, and advanced vault management.
+            </p>
           </div>
-        </HarmonySection>
-      )}
+          <button
+            type="button"
+            onClick={onOpenVault}
+            className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-sm text-background sm:mt-0"
+          >
+            Open Earn <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </HarmonySection>
     </>
   );
 }

@@ -155,7 +155,7 @@ function ProposalRow({ proposalId, searchQuery, statusFilter, onVote, now }: { p
             onClick={() => onVote(Number(proposalId))}
             className="flex items-center gap-1 text-[11px] text-foreground hover:underline"
           >
-            Vote on this <ArrowRight className="w-3 h-3" />
+            Vote privately <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       )}
@@ -163,11 +163,17 @@ function ProposalRow({ proposalId, searchQuery, statusFilter, onVote, now }: { p
   );
 }
 
-export default function ProposalList({ onVote }: { onVote?: (id: number) => void }) {
+export default function ProposalList({
+  onVote,
+  initialFilter = "active",
+}: {
+  onVote?: (id: number) => void;
+  initialFilter?: StatusFilter;
+}) {
   const { data: count, isLoading, refetch } = useProposalCount();
   const proposalCount = Number(count ?? 0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialFilter);
   const now = useChainTime();
 
   // Instantly refetch when a new proposal is created on-chain
@@ -194,8 +200,8 @@ export default function ProposalList({ onVote }: { onVote?: (id: number) => void
           <FileText className="w-4 h-4 text-foreground" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-display text-sm font-semibold text-foreground leading-tight">Browse Proposals</h3>
-          <p className="text-[10px] text-muted-foreground/45 tracking-widest mt-0.5 uppercase">All governance polls</p>
+          <h3 className="font-display text-sm font-semibold text-foreground leading-tight">Private Proposals</h3>
+          <p className="text-[10px] text-muted-foreground/45 tracking-widest mt-0.5 uppercase">Vote privately</p>
         </div>
         <button
           onClick={() => refetch()}
@@ -243,22 +249,18 @@ export default function ProposalList({ onVote }: { onVote?: (id: number) => void
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <FileText className="w-8 h-8 text-muted-foreground/20" />
           <div className="text-sm text-muted-foreground/60">No proposals yet.</div>
-          <div className="text-[11px] text-muted-foreground/40">Switch to the Create tab to launch the first governance poll.</div>
+            <div className="text-[11px] text-muted-foreground/40">Create a private proposal when you are ready for voters.</div>
         </div>
       ) : (
         <div className="space-y-2">
+          {statusFilter !== "all" && (
+            <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Showing {statusFilter} proposals first. If nothing is listed, no {statusFilter} proposal is available for this wallet right now. Use All to review closed history and revealable results.
+            </div>
+          )}
           {Array.from({ length: proposalCount }, (_, i) => (
             <ProposalRow key={i} proposalId={BigInt(i)} searchQuery={searchQuery} statusFilter={statusFilter} onVote={onVote} now={now} />
           ))}
-          {/* Empty filter result */}
-          {statusFilter !== "all" && Array.from({ length: proposalCount }).every((_, i) => {
-            // We can't easily check filter matches without fetching — just show a hint if filter is active
-            return false;
-          }) && (
-            <div className="text-sm text-muted-foreground/50 text-center py-4">
-              No {statusFilter} proposals.
-            </div>
-          )}
         </div>
       )}
     </div>

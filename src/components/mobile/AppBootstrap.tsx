@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ObscuraMark } from "@/components/brand/ObscuraLogo";
+import ObscuraLogo from "@/components/brand/ObscuraLogo";
 import { checkEnvHealth } from "@/lib/envHealth";
 import { hideNativeSplash, initNativeShell } from "@/lib/platform";
 import EnvSetupScreen from "@/components/mobile/EnvSetupScreen";
@@ -64,7 +64,7 @@ export default function AppBootstrap({ children }: { children: ReactNode }) {
               animate={{ scale: [1, 1.04, 1], opacity: [0.85, 1, 0.85] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <ObscuraMark tone="light" className="h-16 w-16" />
+              <ObscuraLogo size="lg" tone="light" />
             </motion.div>
             <p className="mt-6 font-display text-lg tracking-tight text-forest">Obscura</p>
             <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-forest/45">

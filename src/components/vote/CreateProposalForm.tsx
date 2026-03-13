@@ -25,6 +25,11 @@ const DURATION_PRESETS = [
   { label: "Custom", seconds: 0 },
 ];
 
+function formatWriteError(error: unknown, fallback: string): string {
+  const txError = error as { shortMessage?: string; message?: string };
+  return txError.shortMessage ?? txError.message ?? fallback;
+}
+
 interface CreateProposalFormProps {
   onSuccess?: () => void;
 }
@@ -55,6 +60,7 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
   const [category, setCategory] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Use chain time so the custom deadline picker defaults to the correct blockchain time
   const chainNow = useChainTime();
@@ -147,16 +153,23 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
         maxPriorityFeePerGas,
       });
 
+      setIsConfirming(true);
+      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") {
+        throw new Error("Proposal creation transaction reverted");
+      }
+
       setTxHash(hash);
       setTitle("");
       setDescription("");
       setOptions(["Yes", "No"]);
       setSelectedTemplate(0);
       setQuorum("0");
-      // Navigate to proposals list after a short delay so the user can see the success state
-      setTimeout(() => onSuccess?.(), 2000);
-    } catch (err: any) {
-      setError(err.shortMessage ?? err.message ?? "Failed to create proposal");
+      window.setTimeout(() => onSuccess?.(), 1200);
+    } catch (err: unknown) {
+      setError(formatWriteError(err, "Failed to create proposal"));
+    } finally {
+      setIsConfirming(false);
     }
   }
 
@@ -168,15 +181,14 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
           <Plus className="w-4 h-4 text-foreground" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-display text-sm font-semibold text-foreground leading-tight">Create Proposal</h3>
-          <p className="text-[10px] text-muted-foreground/45 tracking-widest mt-0.5 uppercase">Multi-option encrypted governance</p>
+          <h3 className="font-display text-sm font-semibold text-foreground leading-tight">Create Private Proposal</h3>
+          <p className="text-[10px] text-muted-foreground/45 tracking-widest mt-0.5 uppercase">Multi-option vote</p>
         </div>
         <span className="ml-auto shrink-0 pay-badge pay-badge-emerald">FHE</span>
       </div>
 
       <div className="text-[12px] text-muted-foreground/55 leading-relaxed border-l-2 border-emerald-500/20 pl-3">
-        Create a multi-option proposal. Use a template or define custom choices (2–10).
-        Set a quorum (0 = no minimum). After the deadline, anyone can finalize to reveal tallies.
+        Create a simple proposal with two to ten choices. After the deadline, finalization reveals aggregate totals only.
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -185,10 +197,10 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
           <div className="flex items-start gap-2 p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-md">
             <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
             <div>
-              <div className="text-sm text-yellow-400 font-semibold">$OBS Tokens Required</div>
+              <div className="text-sm text-yellow-400 font-semibold">Beta access required</div>
               <div className="text-xs text-yellow-400/70 mt-0.5">
-                You need to claim $OBS tokens at least once before creating a proposal.
-                Go to the <strong className="text-yellow-400">Dashboard</strong> and claim your free 100 $OBS, then come back.
+                This deployed testnet contract requires one faucet claim before creating a proposal.
+                Unlock beta access first, then come back.
               </div>
             </div>
           </div>
@@ -224,7 +236,7 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Increase treasury allocation by 10%"
+            placeholder="e.g. Choose the next private beta improvement"
             className="pay-input"
             maxLength={TITLE_MAX}
           />
@@ -375,7 +387,7 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
         {txHash && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/20 text-foreground text-xs">
             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>Proposal created!</span>
+            <span>Proposal confirmed!</span>
             <a
               href={`https://sepolia.arbiscan.io/tx/${txHash}`}
               target="_blank"
@@ -389,7 +401,7 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
 
         <motion.button
           type="submit"
-          disabled={!isConnected || !hasClaimed || isPending || !OBSCURA_VOTE_ADDRESS}
+          disabled={!isConnected || !hasClaimed || isPending || isConfirming || !OBSCURA_VOTE_ADDRESS}
           whileHover={{ scale: 1.005 }}
           whileTap={{ scale: 0.99 }}
           className="btn-pay btn-pay-emerald w-full py-2.5"
@@ -397,9 +409,11 @@ export default function CreateProposalForm({ onSuccess }: CreateProposalFormProp
           {!isConnected
             ? "Connect Wallet"
             : !hasClaimed
-            ? "Claim $OBS First"
+            ? "Unlock Beta Access First"
             : isPending
             ? "Sign in Wallet..."
+            : isConfirming
+            ? "Confirming..."
             : "Create Proposal"}
         </motion.button>
       </form>

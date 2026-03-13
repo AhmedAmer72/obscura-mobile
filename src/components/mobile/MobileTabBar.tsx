@@ -29,7 +29,7 @@ export default function MobileTabBar() {
               key={href}
               to={href}
               className={cn(
-                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium transition-colors",
+                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] transition-colors",
                 active ? "text-brand" : "text-muted-foreground",
               )}
             >

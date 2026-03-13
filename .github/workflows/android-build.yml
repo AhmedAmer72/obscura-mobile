@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -43,3 +43,20 @@ jobs:
           name: obscura-mobile-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Obscura Mobile APK (debug) #${{ github.run_number }}
+          body: |
+            Debug APK for Obscura mobile (Capacitor).
+
+            - Commit: ${{ github.sha }}
+            - Workflow: ${{ github.workflow }} #${{ github.run_number }}
+
+            **Install:** copy to your phone and allow installs from unknown sources.
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,4 @@
-import { ObscuraMark } from "@/components/brand/ObscuraLogo";
+import ObscuraLogo from "@/components/brand/ObscuraLogo";
 import { cn } from "@/lib/utils";
 
 export default function EnvSetupScreen({
@@ -10,7 +10,7 @@ export default function EnvSetupScreen({
 }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-sage-1 px-6 py-12 text-center">
-      <ObscuraMark tone="light" className="h-14 w-14" />
+      <ObscuraLogo size="md" tone="light" />
       <h1 className="mt-6 font-display text-2xl tracking-tight text-forest">Configuration needed</h1>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-forest/65">
         Add a <code className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-xs">.env</code> file with

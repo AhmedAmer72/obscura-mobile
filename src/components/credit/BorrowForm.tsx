@@ -14,6 +14,7 @@ import FHEStepper from "@/components/shared/FHEStepper";
 import PercentChips from "@/components/shared/PercentChips";
 import { useGasPreflight, GasPreflightError } from "@/hooks/useGasPreflight";
 import { usePreWarmFHE } from "@/hooks/usePreWarmFHE";
+import { BETA_POOL_LABEL, formatBetaOcusdc, parseOcusdcInput, useBetaBorrowLimit } from "@/hooks/useBetaBorrowLimit";
 
 interface Props {
   market: CreditMarketMeta;
@@ -40,7 +41,7 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
   // Plaintext pre-checks (no FHE decrypt needed — fast shadow reads)
   const plainColl       = pos.plainCollateral  ?? 0n;
   const maxBorrowable   = pos.maxBorrowableAmt ?? 0n;
-  const amtBig          = amount ? BigInt(Math.round(parseFloat(amount) * 1e6)) : 0n;
+  const amtBig          = parseOcusdcInput(amount);
   const noCollateral    = plainColl === 0n;
   const wouldBreakLLTV  = amtBig > 0n && amtBig > maxBorrowable;
   const plainBorrow  = pos.plainBorrow ?? 0n;
@@ -60,6 +61,12 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
   }, [market.totalSupplyAssets, market.totalBorrowAssets]);
 
   const noLiquidity = amtBig > 0n && amtBig > availableLiquidity;
+  const betaLimit = useBetaBorrowLimit(availableLiquidity, plainBorrow);
+  const betaMaxBorrowable = useMemo(
+    () => [maxBorrowable, availableLiquidity, betaLimit.remaining].reduce((min, value) => value < min ? value : min, maxBorrowable),
+    [availableLiquidity, betaLimit.remaining, maxBorrowable]
+  );
+  const exceedsBetaLimit = amtBig > 0n && amtBig > betaLimit.remaining;
 
   const fmt6 = (v: bigint) =>
     (Number(v) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 4 });
@@ -74,7 +81,10 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
       // Pre-flight gas check — avoid MetaMask prompt + permit signature
       // when the wallet can't even cover the two-step submit.
       await checkGas();
-      const u = BigInt(Math.round(parseFloat(amount) * 1e6));
+      const u = parseOcusdcInput(amount);
+      if (u > betaLimit.remaining) {
+        throw new Error(`Beta borrow cap — ${formatBetaOcusdc(betaLimit.remaining)} ${market.loanSymbol} remaining for your current tier.`);
+      }
       await borrow(u, destResolved as `0x${string}`);
       setMsg(`Borrowed ${amount} ${market.loanSymbol}.`);
       setAmount("");
@@ -95,7 +105,7 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
   return (
     <div className="grid gap-3">
       {/* Position tiles — FHE encrypted, explicit reveal */}
-      <div className="grid grid-cols-2 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1">
         <EncryptedValue
           label="Your Collateral"
           value={pos.myCollateral}
@@ -116,11 +126,21 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
       {/* Max borrowable — plaintext computed from public shadow + LLTV config */}
       {maxBorrowable > 0n && (
         <div className="flex items-center gap-2 rounded-lg hairline bg-muted/50 px-3 py-2">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Max Borrowable</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Protocol max</span>
           <span className="ml-1 text-[9px] text-muted-foreground/70">(public)</span>
           <span className="ml-auto font-mono text-[13px] text-foreground">{fmt6(maxBorrowable)} {market.loanSymbol}</span>
         </div>
       )}
+
+      <div className="rounded-lg hairline bg-muted/50 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Beta borrow limit</span>
+          <span className="ml-auto font-mono text-[13px] text-foreground">{formatBetaOcusdc(betaLimit.remaining)} {market.loanSymbol}</span>
+        </div>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+          {betaLimit.tierLabel} tier · {BETA_POOL_LABEL}. Pay, Credit, and Vote activity can raise this limit as the beta pool grows.
+        </p>
+      </div>
 
       {/* Health Factor tile */}
       <div className="flex items-center gap-2 rounded-lg hairline bg-muted/50 px-3 py-2">
@@ -157,24 +177,28 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
         className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-accent/50"
       />
       <PercentChips
-        max={maxBorrowable}
+        max={betaMaxBorrowable}
         decimals={6}
         onPick={(v) => setAmount(v === 0n ? "" : (Number(v) / 1e6).toString())}
         accent="violet"
       />
 
-      <label className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-        <Lock className="w-3 h-3" /> Encrypted destination (optional)
-      </label>
-      <input
-        value={dest}
-        onChange={(e) => setDest(e.target.value)}
-        placeholder={address ?? "0x…"}
-        className="rounded-md border border-border bg-background px-3 py-2 font-mono text-xs focus:outline-none focus:border-accent/50"
-      />
-      <p className="-mt-1 text-[11px] text-muted-foreground">
-        Borrow proceeds are sent by the market as encrypted {market.loanSymbol}. The optional destination is reserved for compatible router flows.
-      </p>
+      <details className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+        <summary className="flex cursor-pointer select-none items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground">
+          <Lock className="w-3 h-3" /> Advanced destination
+        </summary>
+        <div className="mt-3 space-y-2">
+          <input
+            value={dest}
+            onChange={(e) => setDest(e.target.value)}
+            placeholder={address ?? "0x…"}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs focus:outline-none focus:border-accent/50"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Leave blank to receive encrypted {market.loanSymbol} in your connected wallet.
+          </p>
+        </div>
+      </details>
 
       {/* Pre-flight warnings — shown before user signs, no FHE needed */}
       {noCollateral && (
@@ -216,9 +240,15 @@ const BorrowForm = ({ market, markets, onSelect, onRefresh, onGoToCollateral }: 
           Supply {market.loanSymbol} to the pool first to create lending liquidity.
         </p>
       )}
+      {!noCollateral && exceedsBetaLimit && (
+        <p className="flex items-center gap-1.5 text-[11px] text-amber-700">
+          <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+          Beta cap allows {formatBetaOcusdc(betaLimit.remaining)} {market.loanSymbol} more for this wallet right now.
+        </p>
+      )}
 
       <button
-        disabled={!amount || !destResolved || busy || noCollateral || wouldBreakLLTV || noLiquidity}
+        disabled={!amount || !destResolved || busy || noCollateral || wouldBreakLLTV || noLiquidity || exceedsBetaLimit}
         onClick={submit}
         className="mt-2 inline-flex items-center justify-center gap-2 rounded-md border border-foreground/15 bg-foreground px-4 py-2.5 text-sm text-background hover:opacity-90 disabled:opacity-50"
       >
