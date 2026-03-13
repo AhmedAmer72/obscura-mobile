@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount, useChainId } from "wagmi";
+import { useAccount } from "wagmi";
+import { useIsArbitrumSepolia } from "@/hooks/useWalletSessionChainId";
 import {
   BarChart3,
   AlertTriangle,
@@ -9,6 +10,7 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  Vault,
   Vote,
   X,
 } from "lucide-react";
@@ -20,6 +22,7 @@ import { VoteHarmonyDashboard } from "@/components/harmony/VoteHarmonyDashboard"
 import {
   VoteHarmonyNotConnected,
   VoteHarmonyPanelCard,
+  VoteHarmonySubNav,
   VoteHarmonyTabShell,
 } from "@/components/harmony/VoteHarmonyTabShell";
 
@@ -33,12 +36,16 @@ import { DelegationPanel } from "@/components/vote/DelegationPanel";
 import { TreasuryPanel } from "@/components/vote/TreasuryPanel";
 import { RewardsPanel } from "@/components/vote/RewardsPanel";
 import { GovernorPanel } from "@/components/vote/GovernorPanel";
+import { VoteParticipationProfile } from "@/components/vote/VoteParticipationProfile";
+import { VoteCollapsibleSection } from "@/components/vote/VoteCollapsibleSection";
+import { VoteAdvancedIntro } from "@/components/vote/VoteAdvancedIntro";
 import { VoteNotificationsPanel } from "@/components/vote/VoteNotificationsPanel";
 import { useVoteOwner, useVoteRole } from "@/hooks/useProposals";
 import { Role } from "@/lib/constants";
 
 type VoteSection = "overview" | "proposals" | "participation" | "advanced";
 type ProposalMode = "browse" | "create" | "vote" | "results";
+type AdvancedMode = "treasury" | "governor";
 
 const VotePage = () => {
   const { address, isConnected } = useAccount();
@@ -48,13 +55,26 @@ const VotePage = () => {
   const userRole = (userRoleRaw as number) ?? Role.NONE;
   const isAdmin = userRole === Role.ADMIN || isOwner;
 
-  const chainId = useChainId();
-  const wrongNetwork = isConnected && chainId !== 421614;
+  const { isWrongNetwork: wrongNetwork, sessionChainId } = useIsArbitrumSepolia();
+  const wrongNetworkConnected = isConnected && wrongNetwork;
 
   const [section, setSection] = useState<VoteSection>("overview");
   const [proposalMode, setProposalMode] = useState<ProposalMode>("browse");
+  const [advancedMode, setAdvancedMode] = useState<AdvancedMode>("treasury");
   const [jumpProposalId, setJumpProposalId] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [delegationSectionOpen, setDelegationSectionOpen] = useState(false);
+  const [rewardsSectionOpen, setRewardsSectionOpen] = useState(true);
+
+  const openParticipationDelegation = useCallback(() => {
+    setSection("participation");
+    setDelegationSectionOpen(true);
+  }, []);
+
+  const openParticipationRewards = useCallback(() => {
+    setSection("participation");
+    setRewardsSectionOpen(true);
+  }, []);
 
   const openProposals = (mode: ProposalMode = "browse", proposalId?: number | string) => {
     setSection("proposals");
@@ -67,7 +87,7 @@ const VotePage = () => {
       <button
         type="button"
         onClick={() => openProposals("vote")}
-        className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
           proposalMode === "browse" || proposalMode === "vote"
             ? "bg-foreground text-background"
             : "hairline hover:bg-muted"
@@ -79,7 +99,7 @@ const VotePage = () => {
       <button
         type="button"
         onClick={() => openProposals("create")}
-        className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
           proposalMode === "create" ? "bg-foreground text-background" : "hairline hover:bg-muted"
         }`}
       >
@@ -89,7 +109,7 @@ const VotePage = () => {
       <button
         type="button"
         onClick={() => openProposals("results")}
-        className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+        className={`inline-flex h-11 min-h-[44px] items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors ${
           proposalMode === "results" ? "bg-foreground text-background" : "hairline hover:bg-muted"
         }`}
       >
@@ -109,12 +129,16 @@ const VotePage = () => {
           <>
             <VoteHarmonyPanelCard title="Vote on proposal" eyebrow="Private ballot">
               <div className="harmony-form-inner">
-                <CastVoteForm initialProposalId={jumpProposalId} />
+                <CastVoteForm
+                  initialProposalId={jumpProposalId}
+                  embedded
+                  onOpenDelegation={openParticipationDelegation}
+                />
               </div>
             </VoteHarmonyPanelCard>
             <VoteHarmonyPanelCard title="Your ballot history" eyebrow="Private verification">
               <div className="harmony-form-inner">
-                <VotingHistory />
+                <VotingHistory embedded />
               </div>
             </VoteHarmonyPanelCard>
           </>
@@ -123,7 +147,7 @@ const VotePage = () => {
         return (
           <VoteHarmonyPanelCard title="Reveal aggregate totals" eyebrow="Results">
             <div className="harmony-form-inner">
-              <TallyReveal />
+              <TallyReveal onClaimRewards={openParticipationRewards} />
             </div>
           </VoteHarmonyPanelCard>
         );
@@ -135,7 +159,7 @@ const VotePage = () => {
           <>
             <VoteHarmonyPanelCard title="Create a private proposal" eyebrow="Secondary action">
               <div className="harmony-form-inner">
-                <CreateProposalForm onSuccess={() => openProposals("browse")} />
+                <CreateProposalForm onSuccess={() => openProposals("browse")} embedded />
               </div>
             </VoteHarmonyPanelCard>
             {isAdmin && (
@@ -153,13 +177,13 @@ const VotePage = () => {
           <>
             <VoteHarmonyPanelCard title="Private proposals" eyebrow="Needs action">
               <div className="harmony-form-inner">
-                <ProposalList onVote={(id) => openProposals("vote", id)} />
+                <ProposalList onVote={(id) => openProposals("vote", id)} embedded />
               </div>
             </VoteHarmonyPanelCard>
             {isConnected && (
               <VoteHarmonyPanelCard title="Your ballot history" eyebrow="Private verification">
                 <div className="harmony-form-inner">
-                  <VotingHistory />
+                  <VotingHistory embedded />
                 </div>
               </VoteHarmonyPanelCard>
             )}
@@ -177,11 +201,12 @@ const VotePage = () => {
               onVote={() => openProposals("vote")}
               onParticipation={() => setSection("participation")}
               onOpenProposals={() => openProposals("browse")}
+              onCreate={() => openProposals("create")}
             />
 
-            <HarmonyFormCard title="Proposals needing attention" eyebrow="Private proposals">
-              <div className="harmony-form-inner -mx-2">
-                <ProposalList onVote={(id) => openProposals("vote", id)} initialFilter="active" />
+            <HarmonyFormCard title="Proposals needing attention" eyebrow="Active governance">
+              <div className="harmony-form-inner vote-harmony-panel -mx-2">
+                <ProposalList onVote={(id) => openProposals("vote", id)} initialFilter="active" embedded />
               </div>
             </HarmonyFormCard>
           </div>
@@ -189,63 +214,124 @@ const VotePage = () => {
 
       case "proposals":
         return (
-          <VoteHarmonyTabShell tab="proposals" sub={proposalMode} actions={proposalActions}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={proposalMode}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              >
-                {renderProposalContent()}
-              </motion.div>
-            </AnimatePresence>
-          </VoteHarmonyTabShell>
+          <div className="vote-harmony-panel">
+            <VoteHarmonyTabShell tab="proposals" sub={proposalMode} actions={proposalActions}>
+              <VoteHarmonySubNav
+                active={proposalMode}
+                onChange={(mode) => openProposals(mode)}
+                items={[
+                  { key: "browse", label: "Browse", icon: Home },
+                  { key: "vote", label: "Vote", icon: Vote },
+                  { key: "create", label: "Create", icon: Plus },
+                  { key: "results", label: "Results", icon: BarChart3 },
+                ]}
+              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={proposalMode}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="mt-6"
+                >
+                  {renderProposalContent()}
+                </motion.div>
+              </AnimatePresence>
+            </VoteHarmonyTabShell>
+          </div>
         );
 
       case "participation":
         return (
-          <VoteHarmonyTabShell tab="participation">
-            <VoteHarmonyPanelCard title="Participation profile" eyebrow="Rewards">
-              <div className="harmony-form-inner">
-                <RewardsPanel />
-              </div>
-            </VoteHarmonyPanelCard>
-            <VoteNotificationsPanel />
-            {!isConnected ? (
-              <VoteHarmonyNotConnected message="Connect your wallet to manage delegation." />
-            ) : (
-              <VoteHarmonyPanelCard title="Delegation" eyebrow="Public power routing">
-                <div className="harmony-form-inner">
-                  <DelegationPanel />
+          <div className="vote-harmony-panel">
+            <VoteHarmonyTabShell tab="participation">
+              <VoteParticipationProfile />
+
+              <VoteCollapsibleSection
+                title="Rewards"
+                eyebrow="Voter incentives"
+                badge="Claim ETH"
+                defaultOpen
+                open={rewardsSectionOpen}
+                onOpenChange={setRewardsSectionOpen}
+              >
+                <div className="harmony-form-inner -mx-1">
+                  <RewardsPanel />
                 </div>
-              </VoteHarmonyPanelCard>
-            )}
-            <ActivityFeed
-              defaultFilter="vote"
-              filters={["vote"]}
-              title="Recent Vote activity"
-              eyebrow="Shared activity"
-              emptyMessage="No indexed Vote activity found for this wallet yet."
-            />
-          </VoteHarmonyTabShell>
+              </VoteCollapsibleSection>
+
+              <VoteCollapsibleSection title="Ballot history" eyebrow="Private verification" defaultOpen={false}>
+                <div className="harmony-form-inner -mx-1">
+                  {!isConnected ? (
+                    <VoteHarmonyNotConnected message="Connect your wallet to review ballot history and verify votes on this device." />
+                  ) : (
+                    <VotingHistory embedded />
+                  )}
+                </div>
+              </VoteCollapsibleSection>
+
+              <VoteCollapsibleSection
+                title="Delegation"
+                eyebrow="Public power routing"
+                defaultOpen={false}
+                open={delegationSectionOpen}
+                onOpenChange={setDelegationSectionOpen}
+              >
+                <div className="harmony-form-inner -mx-1">
+                  {!isConnected ? (
+                    <VoteHarmonyNotConnected message="Connect your wallet to manage delegation." />
+                  ) : (
+                    <DelegationPanel />
+                  )}
+                </div>
+              </VoteCollapsibleSection>
+
+              <VoteCollapsibleSection title="Vote alerts" eyebrow="Notifications" defaultOpen={false}>
+                <VoteNotificationsPanel embedded />
+              </VoteCollapsibleSection>
+
+              <ActivityFeed
+                defaultFilter="vote"
+                filters={["vote"]}
+                title="Recent governance activity"
+                eyebrow="Shared activity"
+                emptyMessage="No indexed Vote activity found for this wallet yet."
+              />
+            </VoteHarmonyTabShell>
+          </div>
         );
 
       case "advanced":
         return (
-          <VoteHarmonyTabShell tab="advanced">
-            <VoteHarmonyPanelCard title="Private proposal treasury" eyebrow="Advanced">
-              <div className="harmony-form-inner">
-                <TreasuryPanel />
+          <div className="vote-harmony-panel">
+            <VoteHarmonyTabShell tab="advanced">
+              <VoteAdvancedIntro />
+              <VoteHarmonySubNav
+                active={advancedMode}
+                onChange={setAdvancedMode}
+                items={[
+                  { key: "treasury", label: "Treasury", icon: Vault },
+                  { key: "governor", label: "Governor", icon: ShieldCheck },
+                ]}
+              />
+              <div className="mt-6">
+                {advancedMode === "treasury" ? (
+                  <VoteHarmonyPanelCard title="Treasury lifecycle" eyebrow="Timelock spends">
+                    <div className="harmony-form-inner">
+                      <TreasuryPanel />
+                    </div>
+                  </VoteHarmonyPanelCard>
+                ) : (
+                  <VoteHarmonyPanelCard title="Executable governance" eyebrow="Governor · Timelock">
+                    <div className="harmony-form-inner -mx-2">
+                      <GovernorPanel wrongNetwork={wrongNetworkConnected} />
+                    </div>
+                  </VoteHarmonyPanelCard>
+                )}
               </div>
-            </VoteHarmonyPanelCard>
-            <VoteHarmonyPanelCard title="Executable governance" eyebrow="Public Governor · Timelock">
-              <div className="harmony-form-inner -mx-2">
-                <GovernorPanel wrongNetwork={wrongNetwork} />
-              </div>
-            </VoteHarmonyPanelCard>
-          </VoteHarmonyTabShell>
+            </VoteHarmonyTabShell>
+          </div>
         );
     }
   };
@@ -287,7 +373,7 @@ const VotePage = () => {
 
   return (
     <HarmonyAppShell appName="Vote" sidebar={harmonySidebar} searchPlaceholder="Search vote…" onSettingsClick={() => setSettingsOpen(true)}>
-      {wrongNetwork && (
+      {wrongNetworkConnected && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -297,7 +383,8 @@ const VotePage = () => {
           <div>
             <div className="text-sm font-semibold text-amber-900">Wrong network</div>
             <div className="mt-0.5 text-xs text-amber-800/80">
-              Please switch to <span className="font-semibold">Arbitrum Sepolia</span> (chain ID 421614) in your wallet to use ObscuraVote.
+              Your wallet is on chain <span className="font-semibold">{sessionChainId ?? "unknown"}</span>.
+              Switch to <span className="font-semibold">Arbitrum Sepolia</span> (421614) in MetaMask or use the header switch button before voting or creating proposals.
             </div>
           </div>
         </motion.div>
@@ -326,7 +413,7 @@ const VotePage = () => {
               onClick={() => setSettingsOpen(false)}
             />
             <motion.div
-              className="fixed right-0 top-0 bottom-0 z-50 w-full overflow-y-auto border-l hairline bg-card shadow-2xl sm:w-[430px]"
+              className="mobile-app-panel-full fixed right-0 z-[60] w-full overflow-y-auto border-l hairline bg-card shadow-2xl sm:w-[430px]"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

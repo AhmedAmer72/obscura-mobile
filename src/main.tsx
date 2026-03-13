@@ -2,11 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { logEnvHealthOnce } from "./lib/envHealth";
-import { IS_MOBILE_APP, isNativePlatform } from "./lib/platform";
-
-if (IS_MOBILE_APP) {
-  document.documentElement.classList.add("mobile-app");
-}
+import { isNativePlatform } from "./lib/platform";
 
 logEnvHealthOnce();
 

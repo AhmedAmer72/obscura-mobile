@@ -336,7 +336,7 @@ export default function SetupSheet({ open, onClose, market, onSuccess }: SetupSh
           />
 
           {/* Sheet */}
-          <div className="mobile-app-sheet-above-tab fixed inset-x-0 bottom-0 z-50 flex justify-center px-0 pointer-events-none sm:px-4">
+          <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-0 pointer-events-none sm:px-4">
           <motion.div
             className="pointer-events-auto w-full rounded-t-3xl hairline bg-card shadow-2xl sm:max-w-[720px]"
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}

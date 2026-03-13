@@ -804,7 +804,7 @@ function SettingsSlideOver({
           <motion.div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.div
-            className="fixed right-0 top-0 bottom-0 z-50 w-full overflow-y-auto border-l hairline bg-card shadow-2xl sm:w-[420px]"
+            className="mobile-app-panel-full fixed right-0 z-[60] w-full overflow-y-auto border-l hairline bg-card shadow-2xl sm:w-[420px]"
             initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
