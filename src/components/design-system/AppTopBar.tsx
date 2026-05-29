@@ -4,7 +4,6 @@ import { Moon, Plus, Search } from "lucide-react";
 import NavRightSlot from "@/components/elite/NavRightSlot";
 import { cn } from "@/lib/utils";
 import ObscuraLogo from "@/components/brand/ObscuraLogo";
-import { IS_MOBILE_APP } from "@/lib/platform";
 
 export default function AppTopBar({
   searchPlaceholder = "Search…",
@@ -24,8 +23,7 @@ export default function AppTopBar({
   return (
     <header
       className={cn(
-        "flex shrink-0 items-center gap-4 border-b border-forest/10 bg-sage-1/95 px-4 backdrop-blur-md sm:px-6",
-        IS_MOBILE_APP ? "mobile-app-header" : "sticky top-0 z-30 h-14",
+        "mobile-app-header sticky top-0 z-30 flex shrink-0 items-center gap-3 border-b border-forest/10 bg-sage-1 sm:gap-4 sm:px-6",
         scrolled && "border-forest/12",
       )}
     >
@@ -53,7 +51,7 @@ export default function AppTopBar({
         </Link>
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-forest/10 bg-white text-forest/45"
+          className="hidden h-9 w-9 items-center justify-center rounded-full border border-forest/10 bg-white text-forest/45 sm:flex"
           aria-label="Theme"
         >
           <Moon className="h-4 w-4" />
