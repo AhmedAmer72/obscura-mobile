@@ -1,4 +1,6 @@
-# Build an Android APK
+# Build an Android APK / Google Play bundle
+
+See **[PLAY_STORE.md](./PLAY_STORE.md)** for keystore setup, GitHub secrets, and Play Console upload.
 
 ## Why GitHub Actions shows no download
 
@@ -12,8 +14,12 @@ Fix billing at https://github.com/settings/billing (free tier still requires a v
 
 ## Option A — GitHub Actions (after billing is fixed)
 
-1. Push to `master`, or manually **Run workflow** on the Android build workflow.
-2. Open the completed run → **Artifacts** → download `obscura-mobile-debug-apk`.
+1. Add signing secrets (see [PLAY_STORE.md](./PLAY_STORE.md)) for Google Play `.aab` builds.
+2. Push to `master`, or manually **Run workflow** on the Android build workflow.
+3. Open the completed run → **Artifacts** or **Releases** (`mobile-*` tag):
+   - `obscura-mobile-debug-apk` — testing
+   - `obscura-mobile-release-aab` — **Google Play upload**
+   - `obscura-mobile-release-apk` — signed side-load
 
 ---
 
@@ -22,7 +28,7 @@ Fix billing at https://github.com/settings/billing (free tier still requires a v
 ### Requirements
 
 - Node.js 20+
-- **JDK 17** ([Eclipse Temurin](https://adoptium.net/))
+- **JDK 21** ([Eclipse Temurin](https://adoptium.net/))
 - Android SDK (easiest via [Android Studio](https://developer.android.com/studio))
 
 Set `JAVA_HOME` to your JDK folder, e.g. `C:\Program Files\Eclipse Adoptium\jdk-17...`

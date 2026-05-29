@@ -3,6 +3,12 @@
 .env.*
 !.env.example
 
+# Android signing — never commit
+*.keystore
+*.jks
+android/keystore.properties
+android/app/obscura-release.keystore
+
 # Logs
 logs
 *.log
