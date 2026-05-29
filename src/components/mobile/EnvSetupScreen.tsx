@@ -9,7 +9,7 @@ export default function EnvSetupScreen({
   onDevContinue?: () => void;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-sage-1 px-6 py-12 text-center">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-sage-1 px-6 py-12 text-center pt-[max(3rem,env(safe-area-inset-top))] pb-[max(3rem,env(safe-area-inset-bottom))]">
       <ObscuraLogo size="md" tone="light" />
       <h1 className="mt-6 font-display text-2xl tracking-tight text-forest">Configuration needed</h1>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-forest/65">
